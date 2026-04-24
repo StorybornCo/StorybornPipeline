@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storyborn — Book Production Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400i&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fef9f0;--ink:#1c1208;--soft:#f5ede0;--border:#e2d5c3;
+  --primary:#d4622a;--pl:#f5e0d5;
+  --accent:#4a8c6f;--al:#ddf0e8;
+  --gold:#c9923b;--muted:#8a7a68;--white:#fffdf8;
+  --danger:#c0392b;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px}
+
+/* ── API KEY BANNER ── */
+.api-banner{
+  background:var(--ink);color:var(--white);
+  padding:1rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.api-banner label{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#f0a060;white-space:nowrap}
+.api-inputs{display:flex;gap:0.5rem;flex:1;flex-wrap:wrap}
+.api-input{
+  flex:1;min-width:200px;
+  background:#2a2010;border:1px solid #4a3820;border-radius:8px;
+  padding:0.5rem 0.9rem;color:var(--white);
+  font-family:'Nunito',sans-serif;font-size:0.82rem;outline:none;
+}
+.api-input:focus{border-color:#f0a060}
+.api-input::placeholder{color:#6a5a40}
+.api-note{font-size:0.72rem;color:#8a7a60;width:100%}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 60px)}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+/* ── LEFT: FORM ── */
+.form-side{
+  padding:2rem 2rem 4rem;
+  border-right:1.5px solid var(--border);
+  overflow-y:auto;
+}
+.brand-name{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--primary)}
+.brand-sub{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1.5rem}
+
+.section{margin-bottom:1.6rem}
+.section-title{
+  font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--primary);margin-bottom:0.8rem;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:0.9rem}
+.field label{display:block;font-size:0.76rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:0.35rem}
+input[type=text],input[type=number],input[type=email],textarea,select{
+  width:100%;background:var(--white);border:1.5px solid var(--border);border-radius:8px;
+  padding:0.65rem 0.9rem;font-family:'Nunito',sans-serif;font-size:0.9rem;color:var(--ink);
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;appearance:none;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--pl)}
+textarea{resize:vertical;min-height:70px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem}
+
+.pill-group{display:flex;flex-wrap:wrap;gap:0.4rem}
+.pill{
+  padding:0.35rem 0.85rem;border:1.5px solid var(--border);border-radius:99px;
+  font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s;
+  background:var(--white);user-select:none;
+}
+.pill:hover{border-color:var(--primary);color:var(--primary)}
+.pill.sel{background:var(--primary);border-color:var(--primary);color:white}
+.pill.msel.sel{background:var(--accent);border-color:var(--accent);color:white}
+
+.tone-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem}
+.tone-card{border:1.5px solid var(--border);border-radius:10px;padding:0.75rem;cursor:pointer;transition:all 0.2s;background:var(--white);text-align:center}
+.tone-card:hover{border-color:var(--primary)}
+.tone-card.sel{border-color:var(--primary);background:var(--pl)}
+.tone-emoji{font-size:1.4rem}
+.tone-name{font-weight:700;font-size:0.8rem;margin-top:0.2rem}
+
+.hint{font-size:0.74rem;color:var(--muted);margin-top:0.3rem;line-height:1.5}
+
+.submit-btn{
+  width:100%;padding:1rem;border-radius:10px;
+  background:var(--primary);color:white;border:none;
+  font-family:'Nunito',sans-serif;font-size:1.05rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+  box-shadow:0 4px 20px rgba(212,98,42,0.3);
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  margin-top:1.5rem;
+}
+.submit-btn:hover{background:#c0541f;transform:translateY(-1px)}
+.submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── RIGHT: PIPELINE ── */
+.pipeline-side{padding:2rem;overflow-y:auto;background:var(--white)}
+.pipeline-header{
+  font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;
+  margin-bottom:1.5rem;color:var(--ink);
+  display:flex;align-items:center;gap:0.7rem;
+}
+
+/* Status stages */
+.stages{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:2rem}
+.stage{
+  display:flex;align-items:center;gap:1rem;
+  padding:0.9rem 1.1rem;border-radius:10px;
+  border:1.5px solid var(--border);background:var(--bg);
+  transition:all 0.3s;
+}
+.stage.active{border-color:var(--gold);background:#fef8e8;box-shadow:0 2px 12px rgba(201,146,59,0.15)}
+.stage.done{border-color:var(--accent);background:var(--al)}
+.stage.error{border-color:var(--danger);background:#fef0f0}
+.stage-icon{font-size:1.3rem;flex-shrink:0;width:28px;text-align:center}
+.stage-body{flex:1}
+.stage-name{font-weight:700;font-size:0.88rem}
+.stage-status{font-size:0.76rem;color:var(--muted);margin-top:0.1rem}
+.stage.active .stage-status{color:var(--gold)}
+.stage.done .stage-status{color:var(--accent)}
+.stage.error .stage-status{color:var(--danger)}
+.stage-check{font-size:1rem;flex-shrink:0}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #ddd;border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle}
+
+/* Story preview */
+.story-preview{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:12px;
+  padding:1.2rem;margin-bottom:1.5rem;display:none;
+  max-height:320px;overflow-y:auto;
+}
+.story-preview h3{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:0.8rem;color:var(--primary)}
+.page-block{margin-bottom:0.9rem;padding-bottom:0.9rem;border-bottom:1px dashed var(--border)}
+.page-block:last-child{border-bottom:none;margin-bottom:0}
+.page-num{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:0.3rem}
+.page-text{font-size:0.88rem;line-height:1.6}
+
+/* Book proof */
+.proof-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:0.8rem;
+  margin-bottom:1.5rem;display:none;
+}
+.proof-page{
+  border:1.5px solid var(--border);border-radius:10px;overflow:hidden;
+  background:white;aspect-ratio:3/4;position:relative;
+  display:flex;flex-direction:column;
+}
+.proof-img{
+  flex:1;background:var(--soft);display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+.proof-img img{width:100%;height:100%;object-fit:cover}
+.proof-img .img-placeholder{
+  text-align:center;padding:1rem;
+  font-size:0.72rem;color:var(--muted);line-height:1.4;
+}
+.proof-img .img-placeholder .emoji{font-size:1.8rem;margin-bottom:0.3rem}
+.proof-text-area{
+  padding:0.6rem 0.7rem;
+  background:white;border-top:1px solid var(--border);
+}
+.proof-pg{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.2rem}
+.proof-txt{font-size:0.72rem;line-height:1.4;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.img-loading{
+  position:absolute;inset:0;background:rgba(255,253,248,0.85);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.4rem;
+  font-size:0.7rem;color:var(--muted);
+}
+
+/* Action buttons */
+.action-row{display:flex;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem}
+.action-btn{
+  padding:0.6rem 1.2rem;border-radius:8px;border:1.5px solid;
+  font-family:'Nunito',sans-serif;font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-approve{background:var(--accent);border-color:var(--accent);color:white}
+.btn-approve:hover{background:#3d7a5f}
+.btn-download{background:var(--white);border-color:var(--border);color:var(--ink)}
+.btn-download:hover{border-color:var(--ink)}
+.btn-reset{background:var(--white);border-color:var(--border);color:var(--muted)}
+.btn-reset:hover{border-color:var(--danger);color:var(--danger)}
+
+.idle-state{
+  text-align:center;padding:3rem 2rem;color:var(--muted);
+}
+.idle-icon{font-size:3.5rem;margin-bottom:1rem;opacity:0.4}
+.idle-text{font-size:0.9rem;line-height:1.6}
+
+.approved-banner{
+  background:var(--al);border:1.5px solid var(--accent);border-radius:10px;
+  padding:1rem 1.2rem;margin-bottom:1rem;
+  font-size:0.88rem;font-weight:600;color:var(--accent);
+  display:none;align-items:center;gap:0.7rem;
+}
+
+/* ── SWATCHES ── */
+.swatch-wrap{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.1rem}
+.sw-item{position:relative;cursor:pointer;flex-shrink:0;}
+.sw-item .swatch{
+  width:34px;height:34px;border-radius:50%;
+  border:3px solid transparent;outline:2px solid transparent;
+  transition:all 0.18s;display:block;
+}
+.sw-item:hover .swatch{transform:scale(1.15)}
+.sw-item.sel .swatch{border-color:var(--ink);outline:2px solid var(--white);box-shadow:0 0 0 3px var(--ink)}
+
+/* Tooltip */
+.sw-item::after{
+  content: attr(data-label);
+  position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:var(--ink);color:var(--white);
+  font-family:'Nunito',sans-serif;font-size:0.7rem;font-weight:600;
+  padding:0.25rem 0.55rem;border-radius:6px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity 0.15s;
+  z-index:10;
+}
+.sw-item::before{
+  content:'';position:absolute;bottom:calc(100% + 1px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--ink);
+  opacity:0;pointer-events:none;transition:opacity 0.15s;z-index:10;
+}
+.sw-item:hover::after,.sw-item:hover::before{opacity:1;}
+
+.feat-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.1rem}
+.feat-pill{
+  padding:0.3rem 0.75rem;border:1.5px solid var(--border);border-radius:99px;
+  font-size:0.8rem;font-weight:500;cursor:pointer;background:var(--white);
+  transition:all 0.15s;user-select:none;
+}
+.feat-pill:hover{border-color:var(--primary);color:var(--primary)}
+.feat-pill.sel{background:var(--primary);border-color:var(--primary);color:white}
+.feat-pill.msel.sel{background:var(--accent);border-color:var(--accent);color:white}
+
+.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
+
+</style>
+</head>
+<body>
+
+<!-- API Key banner -->
+<div class="api-banner">
+  <label>🔑 API Keys</label>
+  <div class="api-inputs">
+    <input class="api-input" id="claudeKey" type="password" placeholder="Anthropic API key (sk-ant-...)">
+    <input class="api-input" id="replicateKey" type="password" placeholder="Replicate API key (r8_...) — generates illustrations">
+  </div>
+  <div class="api-note" style="width:100%">Keys stay in your browser only — sent directly to Anthropic &amp; Replicate. Get your Replicate key at replicate.com/account/api-tokens</div>
+</div>
+
+<!-- ── MAIN TAB BAR ── -->
+<div style="display:flex;background:#fef9f0;border-bottom:2px solid #e2d5c3;overflow-x:auto">
+  <div class="main-tab active" onclick="showMainTab('pipeline')" id="mtab-pipeline"
+       style="padding:0.8rem 1.5rem;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;color:#8a7a68;transition:all 0.2s;margin-bottom:-2px">
+    🚀 Pipeline
+  </div>
+  <div class="main-tab" onclick="showMainTab('prompts')" id="mtab-prompts"
+       style="padding:0.8rem 1.5rem;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;color:#8a7a68;transition:all 0.2s;margin-bottom:-2px">
+    ✏️ Edit Prompts
+  </div>
+  <div class="main-tab" onclick="showMainTab('code')" id="mtab-code"
+       style="padding:0.8rem 1.5rem;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;color:#8a7a68;transition:all 0.2s;margin-bottom:-2px">
+    🧑‍💻 API Code
+  </div>
+</div>
+
+<!-- PIPELINE PANEL -->
+<div id="main-pipeline">
+<div class="layout">
+
+<!-- ═══════════════ LEFT: ORDER FORM ═══════════════ -->
+<div class="form-side">
+  <div class="brand-name">Storyborn</div>
+  <div class="brand-sub">Book Production Pipeline</div>
+
+  <!-- THE STAR -->
+  <div class="section">
+    <div class="section-title">⭐ The Star</div>
+    <div class="row2">
+      <div class="field"><label>Child's Name *</label><input type="text" id="childName" placeholder="e.g. Matilda"></div>
+      <div class="field"><label>Age *</label><input type="number" id="childAge" placeholder="5" min="1" max="99" onchange="onAgeChange(this.value)"></div>
+    </div>
+    <div class="field"><label>Pronouns</label>
+      <div class="feat-row" id="pronounGroup">
+        <div class="feat-pill" onclick="sp(this,'pronounGroup')">She / Her</div>
+        <div class="feat-pill" onclick="sp(this,'pronounGroup')">He / Him</div>
+        <div class="feat-pill" onclick="sp(this,'pronounGroup')">They / Them</div>
+      </div>
+    </div>
+
+    <!-- SKIN TONE — Fitzpatrick scale swatches -->
+    <div class="field">
+      <label>Skin tone</label>
+      <div class="swatch-wrap" id="skinGroup">
+        <div class="sw-item" data-label="Very Fair" onclick="swatchSel(this,'skinGroup')" data-val="very fair, pale skin">
+          <div class="swatch" style="background:#FDDBB4"></div>
+        </div>
+        <div class="sw-item" data-label="Fair" onclick="swatchSel(this,'skinGroup')" data-val="fair, light skin">
+          <div class="swatch" style="background:#F5C28A"></div>
+        </div>
+        <div class="sw-item" data-label="Light Medium" onclick="swatchSel(this,'skinGroup')" data-val="light medium skin">
+          <div class="swatch" style="background:#E8A96A"></div>
+        </div>
+        <div class="sw-item" data-label="Medium" onclick="swatchSel(this,'skinGroup')" data-val="medium olive skin">
+          <div class="swatch" style="background:#C87E45"></div>
+        </div>
+        <div class="sw-item" data-label="Medium Dark" onclick="swatchSel(this,'skinGroup')" data-val="medium dark brown skin">
+          <div class="swatch" style="background:#8D5524"></div>
+        </div>
+        <div class="sw-item" data-label="Deep" onclick="swatchSel(this,'skinGroup')" data-val="deep dark brown skin">
+          <div class="swatch" style="background:#4A2912"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAIR COLOUR swatches -->
+    <div class="field">
+      <label>Hair colour</label>
+      <div class="swatch-wrap" id="hairColourGroup">
+        <div class="sw-item" data-label="Platinum" onclick="swatchSel(this,'hairColourGroup')" data-val="platinum blonde">
+          <div class="swatch" style="background:#F5E6C8"></div>
+        </div>
+        <div class="sw-item" data-label="Blonde" onclick="swatchSel(this,'hairColourGroup')" data-val="golden blonde">
+          <div class="swatch" style="background:#E8C86A"></div>
+        </div>
+        <div class="sw-item" data-label="Strawberry" onclick="swatchSel(this,'hairColourGroup')" data-val="strawberry blonde">
+          <div class="swatch" style="background:#D4956A"></div>
+        </div>
+        <div class="sw-item" data-label="Light Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="light brown">
+          <div class="swatch" style="background:#B07840"></div>
+        </div>
+        <div class="sw-item" data-label="Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="medium brown">
+          <div class="swatch" style="background:#7A4A20"></div>
+        </div>
+        <div class="sw-item" data-label="Dark Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="dark brown">
+          <div class="swatch" style="background:#3D2010"></div>
+        </div>
+        <div class="sw-item" data-label="Black" onclick="swatchSel(this,'hairColourGroup')" data-val="black">
+          <div class="swatch" style="background:#1A1008"></div>
+        </div>
+        <div class="sw-item" data-label="Auburn" onclick="swatchSel(this,'hairColourGroup')" data-val="auburn red">
+          <div class="swatch" style="background:#8B2500"></div>
+        </div>
+        <div class="sw-item" data-label="Red" onclick="swatchSel(this,'hairColourGroup')" data-val="bright red">
+          <div class="swatch" style="background:#C0392B"></div>
+        </div>
+        <div class="sw-item" data-label="White/Silver" onclick="swatchSel(this,'hairColourGroup')" data-val="white or silver">
+          <div class="swatch" style="background:#D8D8D8;border:1px solid #ccc"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAIR TEXTURE + LENGTH -->
+    <div class="row2">
+      <div class="field">
+        <label>Hair texture</label>
+        <div class="feat-row" id="hairTextureGroup">
+          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Straight</div>
+          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Wavy</div>
+          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Curly</div>
+          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Coily</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Hair length</label>
+        <div class="feat-row" id="hairLengthGroup">
+          <div class="feat-pill" onclick="sp(this,'hairLengthGroup')">Short</div>
+          <div class="feat-pill" onclick="sp(this,'hairLengthGroup')">Medium</div>
+          <div class="feat-pill" onclick="sp(this,'hairLengthGroup')">Long</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAIR STYLE extras — single select -->
+    <div class="field">
+      <label>Hair style <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — pick one)</span></label>
+      <div class="feat-row" id="hairStyleGroup">
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Pigtails</div>
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Ponytail</div>
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Braids</div>
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Bun</div>
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Afro puffs</div>
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Fringe / Bangs</div>
+        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Down &amp; loose</div>
+      </div>
+    </div>
+
+    <!-- EYE COLOUR swatches -->
+    <div class="field">
+      <label>Eye colour</label>
+      <div class="swatch-wrap" id="eyeGroup">
+        <div class="sw-item" data-label="Blue" onclick="swatchSel(this,'eyeGroup')" data-val="blue eyes">
+          <div class="swatch" style="background:#5B8DB8"></div>
+        </div>
+        <div class="sw-item" data-label="Light Blue" onclick="swatchSel(this,'eyeGroup')" data-val="light blue eyes">
+          <div class="swatch" style="background:#A8C8E8"></div>
+        </div>
+        <div class="sw-item" data-label="Green" onclick="swatchSel(this,'eyeGroup')" data-val="green eyes">
+          <div class="swatch" style="background:#4A8A5A"></div>
+        </div>
+        <div class="sw-item" data-label="Hazel" onclick="swatchSel(this,'eyeGroup')" data-val="hazel eyes">
+          <div class="swatch" style="background:#8B6914"></div>
+        </div>
+        <div class="sw-item" data-label="Light Brown" onclick="swatchSel(this,'eyeGroup')" data-val="light brown eyes">
+          <div class="swatch" style="background:#A0622A"></div>
+        </div>
+        <div class="sw-item" data-label="Dark Brown" onclick="swatchSel(this,'eyeGroup')" data-val="dark brown eyes">
+          <div class="swatch" style="background:#4A2800"></div>
+        </div>
+        <div class="sw-item" data-label="Grey" onclick="swatchSel(this,'eyeGroup')" data-val="grey eyes">
+          <div class="swatch" style="background:#8A9AA8"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXTRA FEATURES — multi-select is fine here -->
+    <div class="field">
+      <label>Extra features <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — select all that apply)</span></label>
+      <div class="feat-row" id="featuresGroup">
+        <div class="feat-pill msel" onclick="tp(this)">👓 Glasses</div>
+        <div class="feat-pill msel" onclick="tp(this)">🌟 Freckles</div>
+        <div class="feat-pill msel" onclick="tp(this)">😁 Dimples</div>
+        <div class="feat-pill msel" onclick="tp(this)">🦷 Missing tooth</div>
+        <div class="feat-pill msel" onclick="tp(this)">🎀 Hair bow</div>
+        <div class="feat-pill msel" onclick="tp(this)">💫 Birthmark</div>
+        <div class="feat-pill msel" onclick="tp(this)">🩹 Always has a bandaid</div>
+      </div>
+    </div>
+
+    <div class="field"><label>Personality (3 words)</label><input type="text" id="personality" placeholder="e.g. curious, giggly, brave" maxlength="60"></div>
+  </div>
+
+  <!-- THEIR WORLD -->
+  <div class="section">
+    <div class="section-title">🌍 Their World</div>
+    <div class="row2">
+      <div class="field"><label>Favourite toy</label><input type="text" id="favToy" placeholder="e.g. stuffed elephant Ellie"></div>
+      <div class="field"><label>Pet (if any)</label><input type="text" id="pet" placeholder="e.g. Biscuit the dog"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Best friend</label><input type="text" id="bestFriend" placeholder="e.g. Luca"></div>
+      <div class="field"><label>Favourite food</label><input type="text" id="favFood" placeholder="e.g. spaghetti"></div>
+    </div>
+    <div class="field"><label>Things they love <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(pick any — used as light flavour, not the plot)</span></label>
+      <div class="pill-group" id="hobbyGroup">
+        <div class="pill msel" onclick="tp(this)">🦕 Dinosaurs</div>
+        <div class="pill msel" onclick="tp(this)">🎨 Drawing</div>
+        <div class="pill msel" onclick="tp(this)">⚽ Sport</div>
+        <div class="pill msel" onclick="tp(this)">🦄 Unicorns</div>
+        <div class="pill msel" onclick="tp(this)">🚀 Space</div>
+        <div class="pill msel" onclick="tp(this)">🌊 Swimming</div>
+        <div class="pill msel" onclick="tp(this)">🎵 Music</div>
+        <div class="pill msel" onclick="tp(this)">🐾 Animals</div>
+        <div class="pill msel" onclick="tp(this)">🌿 Nature</div>
+        <div class="pill msel" onclick="tp(this)">🏗️ Building</div>
+      </div>
+      <div class="hint">These add personality — e.g. a dinosaur on their shirt or a football under their arm. The story's plot comes from the occasion and setting, not these interests.</div>
+    </div>
+    <div class="field"><label>Anything extra?</label><textarea id="extra" placeholder="Fears, quirks, funny habits..." maxlength="200"></textarea></div>
+  </div>
+
+  <!-- THE MOMENT -->
+  <div class="section">
+    <div class="section-title">🎉 The Moment</div>
+    <div class="field"><label>Occasion *</label>
+      <div class="pill-group" id="occasionGroup">
+        <div class="pill" onclick="sp(this,'occasionGroup')">🎂 Birthday</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">🎒 First Day of School</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">🎄 Christmas</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">👶 New Sibling</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">🏠 Moving House</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">🦷 Lost a Tooth</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">💛 Just Because</div>
+        <div class="pill" onclick="sp(this,'occasionGroup')">✏️ Other…</div>
+      </div>
+    </div>
+    <div class="field" id="customOccField" style="display:none">
+      <label>Describe it</label><input type="text" id="customOcc" placeholder="e.g. Starting swimming lessons">
+    </div>
+    <div class="field">
+      <label>Story tone *</label>
+      <div class="tone-row" id="toneGroup"></div>
+    </div>
+    <div class="field"><label>Setting</label>
+      <div class="pill-group" id="settingGroup">
+        <div class="pill" onclick="sp(this,'settingGroup')">🌲 Enchanted forest</div>
+        <div class="pill" onclick="sp(this,'settingGroup')">🚀 Outer space</div>
+        <div class="pill" onclick="sp(this,'settingGroup')">🏰 Magical kingdom</div>
+        <div class="pill" onclick="sp(this,'settingGroup')">🦘 Australian outback</div>
+        <div class="pill" onclick="sp(this,'settingGroup')">🌊 Under the sea</div>
+        <div class="pill" onclick="sp(this,'settingGroup')">🌈 Dreamland</div>
+      </div>
+    </div>
+    <div class="field"><label>Special message (woven into the ending)</label>
+      <textarea id="specialMsg" placeholder='e.g. "You are braver than you believe..."' maxlength="180"></textarea>
+    </div>
+    <div class="field"><label>Dedication line</label>
+      <input type="text" id="dedication" placeholder='e.g. "For our Matilda, on your very first day."' maxlength="100">
+    </div>
+  </div>
+
+  <!-- ORDER -->
+  <div class="section">
+    <div class="section-title">📚 Order Details</div>
+    <div class="row2">
+      <div class="field"><label>Your name</label><input type="text" id="parentName" placeholder="Sarah & James"></div>
+      <div class="field"><label>Email *</label><input type="email" id="email" placeholder="your@email.com"></div>
+    </div>
+    <div class="field"><label>Format</label>
+      <div class="pill-group" id="formatGroup">
+        <div class="pill sel" onclick="sp(this,'formatGroup')" id="fmt-soft">📖 Softcover — $65</div>
+        <div class="pill" onclick="sp(this,'formatGroup')" id="fmt-hard">📕 Hardcover — $95</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="runPipeline()">
+    ✨ Generate My Book
+  </button>
+</div>
+
+<!-- ═══════════════ RIGHT: PIPELINE ═══════════════ -->
+<div class="pipeline-side" id="pipelinePanel">
+
+  <div class="pipeline-header">📖 Book Production</div>
+
+  <!-- Pipeline stages -->
+  <div class="stages" id="stagesWrap">
+    <div class="stage" id="s0">
+      <div class="stage-icon">📋</div>
+      <div class="stage-body"><div class="stage-name">Order received</div><div class="stage-status" id="s0-status">Waiting for order…</div></div>
+      <div class="stage-check" id="s0-check"></div>
+    </div>
+    <div class="stage" id="s1">
+      <div class="stage-icon">✍️</div>
+      <div class="stage-body"><div class="stage-name">Writing story</div><div class="stage-status" id="s1-status">Claude will write your personalised story</div></div>
+      <div class="stage-check" id="s1-check"></div>
+    </div>
+    <div class="stage" id="s2">
+      <div class="stage-icon">🎨</div>
+      <div class="stage-body"><div class="stage-name">Generating illustrations</div><div class="stage-status" id="s2-status">Stable Diffusion (Replicate) will illustrate each page</div></div>
+      <div class="stage-check" id="s2-check"></div>
+    </div>
+    <div class="stage" id="s3">
+      <div class="stage-icon">📐</div>
+      <div class="stage-body"><div class="stage-name">Assembling proof</div><div class="stage-status" id="s3-status">Layout will be prepared for review</div></div>
+      <div class="stage-check" id="s3-check"></div>
+    </div>
+    <div class="stage" id="s4">
+      <div class="stage-icon">✅</div>
+      <div class="stage-body"><div class="stage-name">Ready for review</div><div class="stage-status" id="s4-status">Awaiting your approval</div></div>
+      <div class="stage-check" id="s4-check"></div>
+    </div>
+  </div>
+
+  <!-- Idle state -->
+  <div class="idle-state" id="idleState">
+    <div class="idle-icon">📖</div>
+    <div class="idle-text">Fill in the form and click<br><strong>Generate My Book</strong><br>to watch the pipeline run live.</div>
+  </div>
+
+  <!-- Story preview -->
+  <div class="story-preview" id="storyPreview">
+    <h3>📝 Story — Page by Page</h3>
+    <div id="storyPages"></div>
+  </div>
+
+  <!-- Proof grid -->
+  <div class="approved-banner" id="approvedBanner">
+    ✅ Proof approved! Sending to print…
+  </div>
+
+  <div class="proof-grid" id="proofGrid"></div>
+
+  <!-- Action buttons -->
+  <div class="action-row" id="actionRow" style="display:none">
+    <button class="action-btn btn-approve" onclick="approveProof()">✅ Approve & Send to Print</button>
+    <button class="action-btn btn-download" onclick="downloadProof()">⬇ Download Proof</button>
+    <button class="action-btn btn-reset" onclick="resetPipeline()">↺ New Order</button>
+  </div>
+
+</div>
+</div><!-- /layout -->
+
+<script>
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+const v = id => document.getElementById(id)?.value?.trim() || '';
+function swatchSel(el, g) {
+  document.querySelectorAll(`#${g} .sw-item`).forEach(i => i.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function sp(el, g) {
+  document.querySelectorAll(`#${g} .pill`).forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  if (g === 'occasionGroup') v$('customOccField').style.display = el.textContent.includes('Other') ? 'block' : 'none';
+}
+function tp(el) { el.classList.toggle('sel'); }
+function st(el) { document.querySelectorAll('.tone-card').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
+function v$(id) { return document.getElementById(id); }
+function pv(g) { const e = document.querySelector(`#${g} .pill.sel`); return e ? e.textContent.replace(/[^\w\s\/,\-']/gu,'').trim() : ''; }
+function swatchVal(g) {
+  const el = document.querySelector(`#${g} .sw-item.sel`);
+  return el ? el.dataset.val : '';
+}
+function mpFeatVal(g) {
+  return [...document.querySelectorAll(`#${g} .feat-pill.sel`)].map(e => e.textContent.replace(/[^\w\s\/\-']/gu,'').trim()).filter(Boolean).join(', ') || '';
+}
+function mpv(g) { return [...document.querySelectorAll(`#${g} .pill.sel`)].map(e=>e.textContent.replace(/[^\w\s]/gu,'').trim()).filter(Boolean).join(', ') || ''; }
+function tv() { const e = document.querySelector('.tone-card.sel .tone-name'); return e ? e.textContent : ''; }
+
+// ─────────────────────────────────────────────
+//  STAGE MANAGER
+// ─────────────────────────────────────────────
+function setStage(i, state, msg) {
+  const el = v$(`s${i}`), st = v$(`s${i}-status`), ck = v$(`s${i}-check`);
+  el.className = 'stage ' + state;
+  st.textContent = msg;
+  ck.innerHTML = state === 'active' ? '<span class="spinner"></span>'
+               : state === 'done'   ? '✅'
+               : state === 'error'  ? '❌' : '';
+}
+
+// ─────────────────────────────────────────────
+//  GATHER ORDER DATA
+// ─────────────────────────────────────────────
+function gatherOrder() {
+  const occ = document.querySelector('#occasionGroup .pill.sel');
+  const occasion = occ ? (occ.textContent.includes('Other') ? v('customOcc') : occ.textContent.replace(/[^\w\s]/gu,'').trim()) : '';
+  return {
+    name:        v('childName'),
+    age:         v('childAge'),
+    pronouns:    pv('pronounGroup') || 'they/them',
+    hairColour:  swatchVal('hairColourGroup') || 'brown',
+    hairTexture: pv('hairTextureGroup') || '',
+    hairLength:  pv('hairLengthGroup') || '',
+    hairStyle:   pv('hairStyleGroup'),
+    skin:        swatchVal('skinGroup') || 'medium skin tone',
+    eyes:        swatchVal('eyeGroup') || 'brown eyes',
+    features:    mpFeatVal('featuresGroup'),
+    personality: v('personality') || 'curious and kind',
+    toy:         v('favToy'),
+    pet:         v('pet'),
+    friend:      v('bestFriend'),
+    food:        v('favFood'),
+    hobbies:     mpv('hobbyGroup'),
+    extra:       v('extra'),
+    occasion,
+    tone:        tv(),
+    setting:     pv('settingGroup') || 'a magical world',
+    specialMsg:  v('specialMsg'),
+    dedication:  v('dedication'),
+    email:       v('email'),
+    parentName:  v('parentName'),
+  };
+}
+
+// ─────────────────────────────────────────────
+//  BUILD STORY PROMPT
+// ─────────────────────────────────────────────
+function buildStoryPrompt(o) {
+  const pm = { 'She / Her': {s:'she',o:'her',p:'her',r:'herself'}, 'He / Him': {s:'he',o:'him',p:'his',r:'himself'}, 'They / Them': {s:'they',o:'them',p:'their',r:'themselves'} };
+  const pr = pm[o.pronouns] || pm['They / Them'];
+
+  // Supporting characters — these get roles in the story
+  const supports = [
+    o.toy    && `${o.toy} (favourite toy — can appear as a companion)`,
+    o.pet    && `${o.pet} (pet — give them a small role if it fits naturally)`,
+    o.friend && `${o.friend} (best friend — can appear as a supporting character)`
+  ].filter(Boolean);
+
+  // World details — flavour only, NOT plot drivers
+  const worldFlavour = [
+    o.food   && `favourite food: ${o.food}`,
+    o.hobbies && `interests: ${o.hobbies}`,
+    o.extra
+  ].filter(Boolean);
+
+  const ageGroup = getAgeGroup(o.age);
+  const ageNote = ageGroup === 'kids'
+    ? `Simple vocabulary for a ${o.age}-year-old. Short sentences, musical rhythm, reads aloud beautifully.`
+    : ageGroup === 'teen'
+    ? `Voice appropriate for a ${o.age}-year-old teenager. Authentic, not condescending.`
+    : `Sophisticated language for an adult reader. Rich prose, emotional depth.`;
+
+  const toneGuide = {
+    'Funny & Silly':      'Include at least 2 moments of physical comedy or wordplay. Light, bouncy sentences.',
+    'Funny & Relatable':  'Lean into relatable awkwardness and in-jokes. Self-aware humour that teens recognise.',
+    'Funny & Witty':      'Sharp, clever wit. Dry observations. Adult humour that rewards re-reading.',
+    'Warm & Heartfelt':   'Prioritise emotional warmth. Every page should feel like a hug.',
+    'Heartfelt':          'Honest and emotionally intelligent. Does not shy away from complexity.',
+    'Warm & Nostalgic':   'Evocative and sentimental. Rich sensory detail that transports the reader.',
+    'Big Adventure':      'High energy, active verbs, sense of momentum. Heroic and exciting.',
+    'Epic Adventure':     'Cinematic scale. High stakes. The protagonist feels genuinely powerful.',
+    'Celebratory':        'Joyful, effervescent, toast-worthy. Every page should make you smile.',
+    'Inspirational':      'Empowering and forward-looking. Leaves the reader feeling seen and capable.',
+  };
+
+  const hairFullDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair', o.hairStyle ? `(${o.hairStyle})` : ''].filter(Boolean).join(' ');
+  const appearanceDesc = `${o.skin}, ${o.eyes}, ${hairFullDesc}${o.features ? ', ' + o.features : ''}`;
+
+  return `You are a warm, imaginative children's book author. Write a personalised picture book story using the details below. Output ONLY the story — no commentary, no preamble.
+
+CHILD: ${o.name}, age ${o.age}. Pronouns: ${pr.s}/${pr.o}/${pr.p}. Appearance: ${appearanceDesc}. Personality: ${o.personality}.
+
+OCCASION: ${o.occasion}
+TONE: ${o.tone}${toneGuide[o.tone] ? ' — ' + toneGuide[o.tone] : ''}
+SETTING: ${o.setting}
+${o.specialMsg ? `SPECIAL MESSAGE (weave naturally into the ending, do not quote directly): "${o.specialMsg}"` : ''}
+${supports.length ? `\nSUPPORTING CHARACTERS (use naturally where they fit):\n${supports.join('\n')}` : ''}
+${worldFlavour.length ? `\nCHARACTER FLAVOUR — use these as light background colour only. They should feel natural when they appear, not dominate the story. One or two brief mentions at most:\n${worldFlavour.join(' | ')}` : ''}
+
+STRUCTURE — write exactly 10 pages. Format each as "Page N: [text]". Keep each page to 2–3 sentences max. ${ageNote}
+
+Page 1–2: Introduce ${o.name} in their world. Establish their personality immediately through action, not description.
+Page 3–4: A challenge or exciting opportunity tied to the occasion arises.
+Page 5–7: The adventure unfolds in ${o.setting}. The setting drives the story — not their interests.
+Page 8–9: A moment of doubt or funny mishap — then ${o.name} finds their own inner strength.
+Page 10: A warm, joyful ending. The special message lives in the feeling of the page, not in quoted words.
+
+IMPORTANT: The story's heart is the OCCASION and the CHILD'S CHARACTER — not their hobbies or interests. Interests can appear as brief colour (a dinosaur on their shirt, a football they're carrying) but should never become the plot. The adventure comes from who they are and what they're celebrating.
+
+Write the story now:`;
+}
+
+// ─────────────────────────────────────────────
+//  PARSE STORY INTO PAGES
+// ─────────────────────────────────────────────
+function parsePages(text) {
+  const pages = [];
+  const matches = [...text.matchAll(/Page\s+(\d+):\s*([\s\S]*?)(?=Page\s+\d+:|$)/gi)];
+  for (const m of matches) {
+    pages.push({ num: parseInt(m[1]), text: m[2].trim() });
+  }
+  if (pages.length === 0) {
+    // fallback: split by double newline
+    text.split(/\n{2,}/).forEach((t, i) => { if(t.trim()) pages.push({ num: i+1, text: t.trim() }); });
+  }
+  return pages;
+}
+
+// ─────────────────────────────────────────────
+//  BUILD ILLUSTRATION PROMPT
+// ─────────────────────────────────────────────
+function buildIllustrationPrompt(o, page) {
+  // Stable Diffusion benefits from style keywords at the start and a locked character seed description
+  const stylePrefix = 'soft watercolour illustration, children\'s picture book style, warm pastel tones, gentle ink outlines, cosy storybook aesthetic, award-winning children\'s book art';
+  // Build rich character description from new fields
+  const hairDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair', o.hairStyle ? `worn ${o.hairStyle}` : ''].filter(Boolean).join(' ');
+  const extraFeats = o.features ? `, ${o.features}` : '';
+  const charDesc = `a ${o.age}-year-old child with ${o.skin}, ${o.eyes}, ${hairDesc}${extraFeats}, wearing bright cheerful storybook clothing`;
+  const scene = page.text.slice(0, 150).replace(/"/g, '\'');
+  return `${stylePrefix}. Scene: ${scene}. Main character: ${charDesc}. Setting: ${o.setting}. Mood: warm, magical, joyful. Highly detailed, full colour, professional illustration.`;
+}
+
+// ─────────────────────────────────────────────
+//  CLAUDE API — generate story
+// ─────────────────────────────────────────────
+async function generateStory(prompt, apiKey) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Claude API error'); }
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+// ─────────────────────────────────────────────
+//  REPLICATE API — Stable Diffusion illustration
+//  Model: stability-ai/stable-diffusion (SDXL)
+//  ~$0.003 per image — 15-20x cheaper than DALL-E
+// ─────────────────────────────────────────────
+async function generateImage(prompt, apiKey) {
+  // Step 1: Start the prediction
+  const res = await fetch('https://api.replicate.com/v1/models/stability-ai/stable-diffusion/predictions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'Prefer': 'wait=30'  // wait up to 30s for result in one request
+    },
+    body: JSON.stringify({
+      input: {
+        prompt: prompt,
+        negative_prompt: 'text, words, letters, watermark, signature, blurry, ugly, deformed, extra limbs, bad anatomy, adult content, photo, realistic',
+        width: 1024,
+        height: 1024,
+        num_inference_steps: 30,
+        guidance_scale: 7.5,
+        scheduler: 'DPMSolverMultistep'
+      }
+    })
+  });
+
+  if (!res.ok) {
+    const e = await res.json();
+    throw new Error(e.detail || 'Replicate API error');
+  }
+
+  let prediction = await res.json();
+
+  // Step 2: If not completed yet, poll until done
+  const maxPolls = 30;
+  let polls = 0;
+  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && polls < maxPolls) {
+    await new Promise(r => setTimeout(r, 2000));
+    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    prediction = await pollRes.json();
+    polls++;
+  }
+
+  if (prediction.status === 'failed') throw new Error('Replicate image generation failed: ' + (prediction.error || 'unknown error'));
+  if (!prediction.output || !prediction.output[0]) throw new Error('No image output from Replicate');
+
+  return prediction.output[0]; // URL to generated image
+}
+
+// ─────────────────────────────────────────────
+//  RENDER STORY PREVIEW
+// ─────────────────────────────────────────────
+function renderStoryPreview(pages) {
+  const container = v$('storyPages');
+  container.innerHTML = pages.map(p => `
+    <div class="page-block">
+      <div class="page-num">Page ${p.num}</div>
+      <div class="page-text">${p.text}</div>
+    </div>`).join('');
+  v$('storyPreview').style.display = 'block';
+}
+
+// ─────────────────────────────────────────────
+//  RENDER PROOF GRID (skeletons first)
+// ─────────────────────────────────────────────
+function renderProofSkeletons(pages) {
+  const grid = v$('proofGrid');
+  grid.style.display = 'grid';
+  grid.innerHTML = pages.map(p => `
+    <div class="proof-page" id="proof-${p.num}">
+      <div class="proof-img">
+        <div class="img-placeholder"><div class="emoji">🎨</div>Illustrating page ${p.num}…</div>
+        <div class="img-loading" id="imgload-${p.num}"><span class="spinner"></span><span>Generating…</span></div>
+      </div>
+      <div class="proof-text-area">
+        <div class="proof-pg">Page ${p.num}</div>
+        <div class="proof-txt">${p.text}</div>
+      </div>
+    </div>`).join('');
+}
+
+function setPageImage(num, url) {
+  const cell = v$(`proof-${num}`);
+  if (!cell) return;
+  const imgArea = cell.querySelector('.proof-img');
+  imgArea.innerHTML = `<img src="${url}" alt="Page ${num} illustration" loading="lazy">`;
+}
+
+function setPageImageError(num) {
+  const loader = v$(`imgload-${num}`);
+  if (loader) loader.innerHTML = '<span style="color:#c0392b;font-size:0.72rem">Image failed</span>';
+}
+
+// ─────────────────────────────────────────────
+//  MAIN PIPELINE
+// ─────────────────────────────────────────────
+async function runPipeline() {
+  const claudeKey = v$('claudeKey').value.trim();
+  const replicateKey = v$('replicateKey').value.trim();
+
+  const order = gatherOrder();
+
+  // Validation
+  if (!order.name) { alert('Please enter the child\'s name.'); return; }
+  if (!order.age)  { alert('Please enter the child\'s age.'); return; }
+  if (!order.occasion) { alert('Please select an occasion.'); return; }
+  if (!order.tone) { alert('Please select a story tone.'); return; }
+  if (!claudeKey)  { alert('Please enter your Anthropic API key at the top.'); return; }
+
+  v$('submitBtn').disabled = true;
+  v$('idleState').style.display = 'none';
+  v$('storyPreview').style.display = 'none';
+  v$('proofGrid').style.display = 'none';
+  v$('actionRow').style.display = 'none';
+  v$('approvedBanner').style.display = 'none';
+
+  // Reset stages
+  for (let i = 0; i <= 4; i++) setStage(i, '', i === 0 ? 'Processing…' : ['Building story prompt…','Queuing illustrations…','Preparing layout…','Awaiting approval…'][i-1] || '');
+
+  try {
+    // ── STAGE 0: Order received ──
+    setStage(0, 'active', 'Reading order details…');
+    await delay(600);
+    setStage(0, 'done', `Order for ${order.name}, age ${order.age} — ${order.occasion}`);
+
+    // ── STAGE 1: Write story ──
+    setStage(1, 'active', 'Claude is writing your story…');
+    const prompt = buildStoryPrompt(order);
+    const storyText = await generateStory(prompt, claudeKey);
+    const pages = parsePages(storyText);
+    setStage(1, 'done', `Story complete — ${pages.length} pages written`);
+    renderStoryPreview(pages);
+
+    // ── STAGE 2: Illustrations ──
+    setStage(2, 'active', `Generating ${pages.length} illustrations with Stable Diffusion…`);
+    renderProofSkeletons(pages);
+
+    if (replicateKey) {
+      // Generate illustrations concurrently (batched to avoid rate limits)
+      let done = 0;
+      const batchSize = 3;
+      for (let i = 0; i < pages.length; i += batchSize) {
+        const batch = pages.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (page) => {
+          try {
+            const imgPrompt = buildIllustrationPrompt(order, page);
+            const url = await generateImage(imgPrompt, replicateKey);
+            setPageImage(page.num, url);
+          } catch(e) {
+            console.warn(`Image failed for page ${page.num}:`, e.message);
+            setPageImageError(page.num);
+          } finally {
+            done++;
+            setStage(2, 'active', `Illustrating… (${done}/${pages.length} pages)`);
+          }
+        }));
+        if (i + batchSize < pages.length) await delay(1000); // rate limit buffer
+      }
+      setStage(2, 'done', `${pages.length} illustrations generated`);
+    } else {
+      // No OpenAI key — show placeholder state
+      await delay(800);
+      pages.forEach(p => {
+        const loader = v$(`imgload-${p.num}`);
+        if (loader) loader.innerHTML = '<span style="font-size:0.7rem;color:var(--muted)">Add Replicate key at replicate.com for illustrations</span>';
+      });
+      setStage(2, 'done', 'Skipped — no OpenAI key provided');
+    }
+
+    // ── STAGE 3: Assemble ──
+    setStage(3, 'active', 'Assembling your proof layout…');
+    await delay(800);
+    setStage(3, 'done', 'Proof assembled — ready for review');
+
+    // ── STAGE 4: Ready ──
+    setStage(4, 'active', 'Awaiting your approval…');
+    await delay(400);
+    setStage(4, 'done', `Proof ready for ${order.email || 'review'}`);
+
+    // Show actions
+    v$('actionRow').style.display = 'flex';
+
+  } catch(err) {
+    const stage = [...document.querySelectorAll('.stage.active')][0];
+    if (stage) {
+      const idx = stage.id.replace('s','');
+      setStage(idx, 'error', '⚠ ' + err.message);
+    }
+    console.error(err);
+  } finally {
+    v$('submitBtn').disabled = false;
+  }
+}
+
+function approveProof() {
+  v$('approvedBanner').style.display = 'flex';
+  v$('actionRow').style.display = 'none';
+  setTimeout(() => {
+    v$('approvedBanner').innerHTML = '🖨️ Sent to printer! Your book will ship within 5 business days.';
+  }, 2000);
+}
+
+function downloadProof() {
+  alert('In production this would generate a print-ready PDF.\n\nYou can build this step with a library like jsPDF or by passing the proof layout to a server-side PDF renderer.');
+}
+
+function resetPipeline() {
+  v$('storyPreview').style.display = 'none';
+  v$('proofGrid').style.display = 'none';
+  v$('actionRow').style.display = 'none';
+  v$('approvedBanner').style.display = 'none';
+  v$('idleState').style.display = 'block';
+  for (let i = 0; i <= 4; i++) {
+    setStage(i, '', ['Waiting for order…','Claude will write your personalised story','Stable Diffusion (Replicate) will illustrate each page','Layout will be prepared for review','Awaiting your approval'][i]);
+    v$(`s${i}-check`).innerHTML = '';
+  }
+}
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+// ─────────────────────────────────────────────
+//  AGE-ADAPTIVE OCCASIONS & TONES
+// ─────────────────────────────────────────────
+const OCCASIONS_KIDS = [
+  {e:'🎂',l:'Birthday'}, {e:'🎒',l:'First Day of School'}, {e:'🎄',l:'Christmas'},
+  {e:'👶',l:'New Sibling'}, {e:'🏠',l:'Moving House'}, {e:'🦷',l:'Lost a Tooth'},
+  {e:'🐣',l:'Easter'}, {e:'💛',l:'Just Because'}, {e:'✏️',l:'Other…'}
+];
+const OCCASIONS_TEEN = [
+  {e:'🎂',l:'Birthday'}, {e:'🎓',l:'Graduation'}, {e:'🎄',l:'Christmas'},
+  {e:'🏆',l:'Big Achievement'}, {e:'💪',l:'Overcoming a Challenge'},
+  {e:'🏠',l:'Moving Out'}, {e:'✈️',l:'Gap Year / Travel'}, {e:'💛',l:'Just Because'}, {e:'✏️',l:'Other…'}
+];
+const OCCASIONS_ADULT = [
+  {e:'🎂',l:'Milestone Birthday'}, {e:'💍',l:'Wedding / Engagement'}, {e:'🎓',l:'Graduation'},
+  {e:'👶',l:'New Baby'}, {e:'🏠',l:'New Home'}, {e:'🎉',l:'Retirement'},
+  {e:'💛',l:'Just Because'}, {e:'💔',l:'Breakup / Healing'}, {e:'✏️',l:'Other…'}
+];
+
+const TONES_KIDS = [
+  {e:'😂', n:'Funny & Silly',   d:'Giggles on every page'},
+  {e:'💛', n:'Warm & Heartfelt',d:'Tender, something to treasure'},
+  {e:'🚀', n:'Big Adventure',   d:'Bold quests, brave heroes'}
+];
+const TONES_TEEN = [
+  {e:'😂', n:'Funny & Relatable', d:'Awkward moments & in-jokes'},
+  {e:'💛', n:'Heartfelt',         d:'Emotional, honest, meaningful'},
+  {e:'🚀', n:'Epic Adventure',    d:'High stakes, big world energy'},
+  {e:'✨', n:'Inspirational',     d:'Empowering, future-focused'}
+];
+const TONES_ADULT = [
+  {e:'😂', n:'Funny & Witty',   d:'Clever humour, sharp observations'},
+  {e:'💛', n:'Warm & Nostalgic',d:'Sentimental, beautifully written'},
+  {e:'🥂', n:'Celebratory',     d:'Joyful, uplifting, toast-worthy'},
+  {e:'✨', n:'Inspirational',   d:'Reflective, meaningful, poetic'}
+];
+
+function getAgeGroup(age) {
+  const n = parseInt(age) || 0;
+  if (n <= 12) return 'kids';
+  if (n <= 17) return 'teen';
+  return 'adult';
+}
+
+function onAgeChange(val) {
+  const group = getAgeGroup(val);
+  renderOccasions(group);
+  renderTones(group);
+}
+
+function renderOccasions(group) {
+  const occasions = group === 'kids' ? OCCASIONS_KIDS : group === 'teen' ? OCCASIONS_TEEN : OCCASIONS_ADULT;
+  const hint = group === 'kids' ? '' : group === 'teen' ? 'Tailored for teens 13–17' : 'Tailored for adults 18+';
+  const container = document.getElementById('occasionGroup');
+  container.innerHTML = occasions.map(o =>
+    `<div class="pill" onclick="sp(this,'occasionGroup')">${o.e} ${o.l}</div>`
+  ).join('');
+  const hintEl = document.getElementById('occasionHint');
+  if (hintEl) hintEl.textContent = hint;
+  const customField = document.getElementById('customOccField');
+  if (customField) customField.style.display = 'none';
+}
+
+function renderTones(group) {
+  const tones = group === 'kids' ? TONES_KIDS : group === 'teen' ? TONES_TEEN : TONES_ADULT;
+  const container = document.getElementById('toneGroup');
+  container.innerHTML = tones.map(t =>
+    `<div class="tone-card" onclick="st(this)"><div class="tone-emoji">${t.e}</div><div class="tone-name">${t.n}</div><div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">${t.d}</div></div>`
+  ).join('');
+}
+
+// Initialise with kids defaults on load
+document.addEventListener('DOMContentLoaded', () => {
+  renderOccasions('kids');
+  renderTones('kids');
+});
+
+</script>
+
+</div><!-- /layout -->
+</div><!-- /main-pipeline -->
+
+<!-- PROMPTS EDITOR PANEL -->
+<div id="main-prompts" style="display:none;max-width:1000px;margin:0 auto;padding:2rem 1.5rem 5rem">
+
+  <div style="background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:1.5rem 1.8rem;margin-bottom:2rem">
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--ink);margin-bottom:0.5rem">✏️ Prompt Editor</h2>
+    <p style="font-size:0.86rem;color:var(--muted);line-height:1.6">Edit the prompts sent to Claude (story writing) and Replicate (illustrations). Changes apply immediately on the next run. Template variables like <code style="background:#f5ede0;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.8rem">${o.name}</code> are filled in from the order form at runtime.</p>
+  </div>
+
+  <!-- STORY PROMPT -->
+  <div style="margin-bottom:2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <div style="font-family:'Courier New',monospace;font-size:0.72rem;letter-spacing:0.1em;color:var(--muted);font-weight:600">STORY PROMPT — sent to Claude API</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">Generates the 10-page story text. Edit tone rules, structure, page count, writing style.</div>
+      </div>
+      <div style="display:flex;gap:0.5rem">
+        <button onclick="document.getElementById('storyPromptEditor').value=DEFAULT_STORY_PROMPT"
+          style="padding:0.4rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;background:var(--white);font-size:0.78rem;cursor:pointer;color:var(--muted);font-family:'Nunito',sans-serif">↺ Reset</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('storyPromptEditor').value);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',2000)"
+          style="padding:0.4rem 0.9rem;border:1.5px solid var(--primary);border-radius:8px;background:var(--primary);color:white;font-size:0.78rem;cursor:pointer;font-weight:600;font-family:'Nunito',sans-serif">Copy</button>
+      </div>
+    </div>
+    <textarea id="storyPromptEditor"
+      style="width:100%;min-height:380px;background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.78rem;line-height:1.7;padding:1.2rem;border-radius:12px;border:1.5px solid #3a2010;outline:none;resize:vertical;tab-size:2"
+      spellcheck="false"></textarea>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem">Variables: <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.name}</code> <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.age}</code> <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.occasion}</code> <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.tone}</code> <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.setting}</code> <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${appearanceDesc}</code> <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.specialMsg}</code></div>
+  </div>
+
+  <!-- ILLUSTRATION PROMPT -->
+  <div style="margin-bottom:2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <div style="font-family:'Courier New',monospace;font-size:0.72rem;letter-spacing:0.1em;color:var(--muted);font-weight:600">ILLUSTRATION PROMPT — sent to Replicate per page</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">Edit style keywords, character description format, mood. One prompt is built per page at runtime.</div>
+      </div>
+      <div style="display:flex;gap:0.5rem">
+        <button onclick="document.getElementById('illPromptEditor').value=DEFAULT_ILL_PROMPT"
+          style="padding:0.4rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;background:var(--white);font-size:0.78rem;cursor:pointer;color:var(--muted);font-family:'Nunito',sans-serif">↺ Reset</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('illPromptEditor').value);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',2000)"
+          style="padding:0.4rem 0.9rem;border:1.5px solid var(--primary);border-radius:8px;background:var(--primary);color:white;font-size:0.78rem;cursor:pointer;font-weight:600;font-family:'Nunito',sans-serif">Copy</button>
+      </div>
+    </div>
+    <textarea id="illPromptEditor"
+      style="width:100%;min-height:160px;background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.78rem;line-height:1.7;padding:1.2rem;border-radius:12px;border:1.5px solid #3a2010;outline:none;resize:vertical"
+      spellcheck="false"></textarea>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem">Variables inserted at runtime: <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${scene}</code> (page text) <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${charDesc}</code> (character description) <code style="background:#f5ede0;padding:0.1rem 0.35rem;border-radius:3px">${o.setting}</code></div>
+  </div>
+
+  <!-- NEGATIVE PROMPT -->
+  <div style="margin-bottom:2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <div style="font-family:'Courier New',monospace;font-size:0.72rem;letter-spacing:0.1em;color:var(--muted);font-weight:600">NEGATIVE PROMPT — things to avoid in illustrations</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">Add comma-separated terms to prevent unwanted elements from appearing.</div>
+      </div>
+      <button onclick="document.getElementById('negPromptEditor').value=DEFAULT_NEG_PROMPT"
+        style="padding:0.4rem 0.9rem;border:1.5px solid var(--border);border-radius:8px;background:var(--white);font-size:0.78rem;cursor:pointer;color:var(--muted);font-family:'Nunito',sans-serif">↺ Reset</button>
+    </div>
+    <textarea id="negPromptEditor"
+      style="width:100%;min-height:80px;background:#1a1208;color:#f0a060;font-family:'Courier New',monospace;font-size:0.78rem;line-height:1.7;padding:1.2rem;border-radius:12px;border:1.5px solid #3a2010;outline:none;resize:vertical"
+      spellcheck="false"></textarea>
+  </div>
+
+  <!-- PARAMETERS -->
+  <div style="margin-bottom:2rem">
+    <div style="font-family:'Courier New',monospace;font-size:0.72rem;letter-spacing:0.1em;color:var(--muted);font-weight:600;margin-bottom:0.8rem">API PARAMETERS</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:1.4rem">
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Claude Model</label>
+        <select id="param-model" style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none;appearance:none">
+          <option value="claude-sonnet-4-20250514" selected>Sonnet 4 — recommended</option>
+          <option value="claude-opus-4-6">Opus 4 — best quality</option>
+          <option value="claude-haiku-4-5-20251001">Haiku 4 — fastest/cheapest</option>
+        </select>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Sonnet balances quality + cost best.</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Max Tokens</label>
+        <input id="param-tokens" type="number" value="2000" min="500" max="8000" step="100"
+          style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none">
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Max story length. 2000 covers 10 pages comfortably.</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Pages per Book</label>
+        <input id="param-pages" type="number" value="10" min="6" max="24"
+          style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none">
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Pages to write + illustrate per order.</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">SD Inference Steps</label>
+        <input id="param-steps" type="number" value="30" min="10" max="80"
+          style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none">
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Higher = better quality, slower. 25-35 is optimal.</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Guidance Scale</label>
+        <input id="param-guidance" type="number" value="7.5" min="1" max="20" step="0.5"
+          style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none">
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Prompt adherence. 7–9 recommended.</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Image Size</label>
+        <select id="param-size" style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none;appearance:none">
+          <option value="512">512 × 512 (fastest)</option>
+          <option value="768">768 × 768 (balanced)</option>
+          <option value="1024" selected>1024 × 1024 (print quality)</option>
+        </select>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">1024 recommended for print.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fef5d5;border:1.5px solid #e8d585;border-radius:10px;padding:1rem 1.2rem;font-size:0.84rem;line-height:1.6;color:#7a6010">
+    💡 <strong>Changes are session-only.</strong> To make them permanent, update <code style="background:white;padding:0.1rem 0.4rem;border-radius:3px">buildStoryPrompt()</code> and <code style="background:white;padding:0.1rem 0.4rem;border-radius:3px">buildIllustrationPrompt()</code> in the source code, and update the parameters inside <code style="background:white;padding:0.1rem 0.4rem;border-radius:3px">generateImage()</code>.
+  </div>
+</div>
+
+<!-- API CODE PANEL -->
+<div id="main-code" style="display:none;max-width:1000px;margin:0 auto;padding:2rem 1.5rem 5rem">
+
+  <div style="background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:1.5rem 1.8rem;margin-bottom:2rem">
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--ink);margin-bottom:0.5rem">🧑‍💻 API Code Reference</h2>
+    <p style="font-size:0.86rem;color:var(--muted);line-height:1.6">All API call code in one place. Copy any block to use in your own backend, Node.js server, or Shopify app.</p>
+  </div>
+
+  <div style="margin-bottom:1.5rem">
+    <div style="font-family:'Courier New',monospace;font-size:0.68rem;letter-spacing:0.12em;color:var(--muted);font-weight:600;margin-bottom:0.6rem">1. CLAUDE API — STORY GENERATION</div>
+    <div style="position:relative">
+      <pre id="code-claude" style="background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.76rem;line-height:1.7;padding:1.4rem 1.4rem 1.4rem 1.4rem;border-radius:12px;border:1.5px solid #3a2010;overflow-x:auto;white-space:pre;margin:0">// Claude API — Story Generation
+async function generateStory(prompt, apiKey) {
+  const model   = document.getElementById('param-model')?.value  || 'claude-sonnet-4-20250514';
+  const maxToks = document.getElementById('param-tokens')?.value || 2000;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type':      'application/json',
+      'x-api-key':         apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model:      model,
+      max_tokens: parseInt(maxToks),
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    const e = await res.json();
+    throw new Error(e.error?.message || 'Claude API error');
+  }
+  const data = await res.json();
+  return data.content[0].text;
+}</pre>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('code-claude').textContent);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',2000)"
+        style="position:absolute;top:0.7rem;right:0.7rem;background:#2e2010;border:1px solid #4a3020;border-radius:7px;padding:0.3rem 0.8rem;font-size:0.68rem;cursor:pointer;color:#e8dcc8;font-family:'Nunito',sans-serif">Copy</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.5rem">
+    <div style="font-family:'Courier New',monospace;font-size:0.68rem;letter-spacing:0.12em;color:var(--muted);font-weight:600;margin-bottom:0.6rem">2. REPLICATE API — STABLE DIFFUSION ILLUSTRATIONS</div>
+    <div style="position:relative">
+      <pre id="code-replicate" style="background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.76rem;line-height:1.7;padding:1.4rem;border-radius:12px;border:1.5px solid #3a2010;overflow-x:auto;white-space:pre;margin:0">// Replicate API — Stable Diffusion Illustration
+async function generateImage(prompt, apiKey) {
+  const steps    = parseInt(document.getElementById('param-steps')?.value    || 30);
+  const guidance = parseFloat(document.getElementById('param-guidance')?.value || 7.5);
+  const size     = parseInt(document.getElementById('param-size')?.value     || 1024);
+  const negPrompt = document.getElementById('negPromptEditor')?.value
+    || 'text, words, watermark, blurry, ugly, deformed, extra limbs, bad anatomy, photo, realistic';
+
+  // Step 1: Start prediction
+  const res = await fetch('https://api.replicate.com/v1/models/stability-ai/stable-diffusion/predictions', {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'Prefer':        'wait=30'
+    },
+    body: JSON.stringify({
+      input: {
+        prompt:              prompt,
+        negative_prompt:     negPrompt,
+        width:               size,
+        height:              size,
+        num_inference_steps: steps,
+        guidance_scale:      guidance,
+        scheduler:           'DPMSolverMultistep'
+      }
+    })
+  });
+
+  if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Replicate error'); }
+  let prediction = await res.json();
+
+  // Step 2: Poll until complete
+  let polls = 0;
+  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && polls < 30) {
+    await new Promise(r => setTimeout(r, 2000));
+    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`,
+      { headers: { 'Authorization': `Bearer ${apiKey}` } });
+    prediction = await pollRes.json();
+    polls++;
+  }
+
+  if (prediction.status === 'failed') throw new Error('Image failed: ' + prediction.error);
+  if (!prediction.output?.[0]) throw new Error('No output from Replicate');
+  return prediction.output[0];  // Image URL
+}</pre>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('code-replicate').textContent);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',2000)"
+        style="position:absolute;top:0.7rem;right:0.7rem;background:#2e2010;border:1px solid #4a3020;border-radius:7px;padding:0.3rem 0.8rem;font-size:0.68rem;cursor:pointer;color:#e8dcc8;font-family:'Nunito',sans-serif">Copy</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.5rem">
+    <div style="font-family:'Courier New',monospace;font-size:0.68rem;letter-spacing:0.12em;color:var(--muted);font-weight:600;margin-bottom:0.6rem">3. STORY PROMPT BUILDER</div>
+    <div style="position:relative">
+      <pre id="code-story-builder" style="background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.76rem;line-height:1.7;padding:1.4rem;border-radius:12px;border:1.5px solid #3a2010;overflow-x:auto;white-space:pre;margin:0">// Builds the story prompt from order data
+function buildStoryPrompt(o) {
+  const pronounMap = {
+    'She / Her':   { s:'she',  o:'her',  p:'her',   r:'herself'  },
+    'He / Him':    { s:'he',   o:'him',  p:'his',   r:'himself'  },
+    'They / Them': { s:'they', o:'them', p:'their', r:'themselves'}
+  };
+  const pr = pronounMap[o.pronouns] || pronounMap['They / Them'];
+
+  const hairDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair',
+    o.hairStyle ? `(${o.hairStyle})` : ''].filter(Boolean).join(' ');
+  const appearanceDesc = `${o.skin}, ${o.eyes}, ${hairDesc}${o.features ? ', ' + o.features : ''}`;
+
+  const supports = [
+    o.toy    && `${o.toy} (favourite toy)`,
+    o.pet    && `${o.pet} (pet)`,
+    o.friend && `${o.friend} (best friend)`
+  ].filter(Boolean);
+
+  const world = [
+    o.food    && `favourite food: ${o.food}`,
+    o.hobbies && `loves: ${o.hobbies}`,
+    o.extra
+  ].filter(Boolean);
+
+  return `You are a warm, imaginative children's book author.
+Write a personalised picture book story. Output ONLY the story.
+
+CHILD: ${o.name}, age ${o.age}. Pronouns: ${pr.s}/${pr.o}/${pr.p}.
+Appearance: ${appearanceDesc}. Personality: ${o.personality}.
+${world.length ? 'WORLD: ' + world.join(' | ') : ''}
+${supports.length ? 'SUPPORTING: ' + supports.join(' | ') : ''}
+OCCASION: ${o.occasion}
+TONE: ${o.tone}
+SETTING: ${o.setting}
+SPECIAL MESSAGE: "${o.specialMsg}"
+
+Write exactly 10 pages. Format: "Page N: [2-3 sentence text]"`;
+}
+
+// Builds one illustration prompt per page
+function buildIllustrationPrompt(o, page) {
+  const stylePrefix = 'soft watercolour illustration, children's picture book style, '
+    + 'warm pastel tones, gentle ink outlines, cosy storybook aesthetic';
+  const hairDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair'].filter(Boolean).join(' ');
+  const charDesc = `a ${o.age}-year-old with ${o.skin}, ${o.eyes}, ${hairDesc}`;
+  const scene = page.text.slice(0, 150).replace(/"/g, "'");
+  return `${stylePrefix}. Scene: ${scene}. Character: ${charDesc}. `
+    + `Setting: ${o.setting}. Mood: warm, magical, joyful.`;
+}</pre>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('code-story-builder').textContent);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',2000)"
+        style="position:absolute;top:0.7rem;right:0.7rem;background:#2e2010;border:1px solid #4a3020;border-radius:7px;padding:0.3rem 0.8rem;font-size:0.68rem;cursor:pointer;color:#e8dcc8;font-family:'Nunito',sans-serif">Copy</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB SWITCHING + PROMPT DEFAULTS -->
+<script>
+const DEFAULT_STORY_PROMPT = `You are a warm, imaginative children's book author. Write a personalised picture book story using the details below. Output ONLY the story — no commentary, no preamble.
+
+CHILD: [name], age [age]. Pronouns: [she/he/they]. Appearance: [skin], [eyes], [hair]. Personality: [personality].
+
+OCCASION: [occasion]
+TONE: [tone] — [tone-specific writing instruction]
+SETTING: [setting]
+SPECIAL MESSAGE (weave naturally into ending): "[special message]"
+
+SUPPORTING CHARACTERS (use naturally where they fit):
+- [toy] (favourite toy — can appear as a companion)
+- [pet] (pet — give them a small role if it fits naturally)
+- [friend] (best friend — can appear as a supporting character)
+
+CHARACTER FLAVOUR — use these as light background colour only. They should feel natural when they appear, not dominate the story. One or two brief mentions at most:
+[favourite food] | interests: [hobbies] | [extra details]
+
+STRUCTURE — write exactly 10 pages. Format: "Page N: [text]". 2–3 sentences per page.
+Language: simple, musical, reads aloud beautifully.
+
+Page 1–2: Introduce the child in their world. Show personality through action, not description.
+Page 3–4: A challenge or exciting opportunity tied to the occasion arises.
+Page 5–7: The adventure unfolds in the setting. The setting drives the story — not their hobbies.
+Page 8–9: A moment of doubt or mishap — then the child finds their own inner strength.
+Page 10: A warm, joyful ending. The special message lives in the feeling, not in quoted words.
+
+IMPORTANT: The story's heart is the OCCASION and the CHILD'S CHARACTER — not their hobbies or interests. Interests can appear as brief colour (a dinosaur on their shirt, a football they're carrying) but should never become the plot.
+
+Write the story now:`;
+
+const DEFAULT_ILL_PROMPT = `soft watercolour illustration, children's picture book style, warm pastel tones, gentle ink outlines, cosy storybook aesthetic, award-winning children's book art. Scene: [page text]. Main character: [age]-year-old child with [skin], [eyes], [hair description], wearing bright cheerful storybook clothing. Setting: [setting]. Mood: warm, magical, joyful. Highly detailed, full colour, professional illustration.`;
+
+const DEFAULT_NEG_PROMPT = `text, words, letters, watermark, signature, blurry, ugly, deformed, extra limbs, bad anatomy, adult content, photo, realistic, dark, scary, violence, weapons`;
+
+function showMainTab(id) {
+  ['main-pipeline','main-prompts','main-code'].forEach(p => {
+    const el = document.getElementById(p);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('main-' + id).style.display = 'block';
+  document.querySelectorAll('.main-tab').forEach(t => {
+    t.style.color = '#8a7a68';
+    t.style.borderBottomColor = 'transparent';
+  });
+  const active = document.getElementById('mtab-' + id);
+  if (active) { active.style.color = '#d4622a'; active.style.borderBottomColor = '#f5a623'; }
+  if (id === 'prompts') initPromptEditors();
+}
+
+let promptsInitialised = false;
+function initPromptEditors() {
+  if (promptsInitialised) return;
+  promptsInitialised = true;
+  document.getElementById('storyPromptEditor').value = DEFAULT_STORY_PROMPT;
+  document.getElementById('illPromptEditor').value   = DEFAULT_ILL_PROMPT;
+  document.getElementById('negPromptEditor').value   = DEFAULT_NEG_PROMPT;
+}
+</script>
+
+</body>
+</html>
