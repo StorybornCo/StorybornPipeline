@@ -249,10 +249,17 @@ textarea{resize:vertical;min-height:70px}
 <div class="api-banner">
   <label>🔑 API Keys</label>
   <div class="api-inputs">
-    <input class="api-input" id="claudeKey" type="password" placeholder="Anthropic API key (sk-ant-...)">
-    <input class="api-input" id="replicateKey" type="password" placeholder="Replicate API key (r8_...) — generates illustrations">
+    <input class="api-input" id="claudeKey" type="password" placeholder="Anthropic API key (sk-ant-...)" oninput="maybeSaveKeys()">
+    <input class="api-input" id="replicateKey" type="password" placeholder="fal.ai API key — generates illustrations" oninput="maybeSaveKeys()">
   </div>
-  <div class="api-note" style="width:100%">Keys stay in your browser only — sent directly to Anthropic &amp; Replicate. Get your Replicate key at replicate.com/account/api-tokens</div>
+  <div class="api-note" style="width:100%;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap">
+    <span>Keys stay in your browser only.</span>
+    <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-weight:700;color:#D04820">
+      <input type="checkbox" id="rememberKeys" onchange="toggleRememberKeys()" style="width:14px;height:14px;cursor:pointer">
+      Remember keys
+    </label>
+    <span id="keySavedMsg" style="font-size:0.7rem;color:#2E7D32;display:none">✓ Saved</span>
+  </div>
 </div>
 
 <!-- ── MAIN TAB BAR ── -->
@@ -280,7 +287,7 @@ textarea{resize:vertical;min-height:70px}
   <div class="brand-name">Storyborn</div>
   <div class="brand-sub">Book Production Pipeline</div>
 
-  <!-- THE STAR -->
+  <!-- ⭐ THE STAR -->
   <div class="section">
     <div class="section-title">⭐ The Star</div>
     <div class="row2">
@@ -289,138 +296,93 @@ textarea{resize:vertical;min-height:70px}
     </div>
     <div class="field"><label>Pronouns</label>
       <div class="feat-row" id="pronounGroup">
-        <div class="feat-pill" onclick="sp(this,'pronounGroup')">She / Her</div>
-        <div class="feat-pill" onclick="sp(this,'pronounGroup')">He / Him</div>
-        <div class="feat-pill" onclick="sp(this,'pronounGroup')">They / Them</div>
+        <div class="feat-pill" onclick="spf(this,'pronounGroup')">She / Her</div>
+        <div class="feat-pill" onclick="spf(this,'pronounGroup')">He / Him</div>
+        <div class="feat-pill" onclick="spf(this,'pronounGroup')">They / Them</div>
       </div>
     </div>
+    <div class="field"><label>Personality <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(3 words)</span></label>
+      <input type="text" id="personality" placeholder="e.g. curious, giggly, brave" maxlength="60">
+    </div>
+  </div>
 
-    <!-- SKIN TONE — Fitzpatrick scale swatches -->
+  <!-- 🎨 APPEARANCE (for illustrations) -->
+  <div class="section">
+    <div class="section-title">🎨 Appearance <span style="font-weight:400;font-size:0.68rem;letter-spacing:0;text-transform:none;color:var(--muted)">— used for illustrations only</span></div>
+
     <div class="field">
       <label>Skin tone</label>
       <div class="swatch-wrap" id="skinGroup">
-        <div class="sw-item" data-label="Very Fair" onclick="swatchSel(this,'skinGroup')" data-val="very fair, pale skin">
-          <div class="swatch" style="background:#FDDBB4"></div>
-        </div>
-        <div class="sw-item" data-label="Fair" onclick="swatchSel(this,'skinGroup')" data-val="fair, light skin">
-          <div class="swatch" style="background:#F5C28A"></div>
-        </div>
-        <div class="sw-item" data-label="Light Medium" onclick="swatchSel(this,'skinGroup')" data-val="light medium skin">
-          <div class="swatch" style="background:#E8A96A"></div>
-        </div>
-        <div class="sw-item" data-label="Medium" onclick="swatchSel(this,'skinGroup')" data-val="medium olive skin">
-          <div class="swatch" style="background:#C87E45"></div>
-        </div>
-        <div class="sw-item" data-label="Medium Dark" onclick="swatchSel(this,'skinGroup')" data-val="medium dark brown skin">
-          <div class="swatch" style="background:#8D5524"></div>
-        </div>
-        <div class="sw-item" data-label="Deep" onclick="swatchSel(this,'skinGroup')" data-val="deep dark brown skin">
-          <div class="swatch" style="background:#4A2912"></div>
-        </div>
+        <div class="sw-item" data-label="Very Fair" onclick="swatchSel(this,'skinGroup')" data-val="very fair, pale skin"><div class="swatch" style="background:#FDDBB4"></div></div>
+        <div class="sw-item" data-label="Fair" onclick="swatchSel(this,'skinGroup')" data-val="fair, light skin"><div class="swatch" style="background:#F5C28A"></div></div>
+        <div class="sw-item" data-label="Light Medium" onclick="swatchSel(this,'skinGroup')" data-val="light medium skin"><div class="swatch" style="background:#E8A96A"></div></div>
+        <div class="sw-item" data-label="Medium" onclick="swatchSel(this,'skinGroup')" data-val="medium skin tone"><div class="swatch" style="background:#C8844A"></div></div>
+        <div class="sw-item" data-label="Medium Dark" onclick="swatchSel(this,'skinGroup')" data-val="medium dark skin tone"><div class="swatch" style="background:#9A5C2A"></div></div>
+        <div class="sw-item" data-label="Deep" onclick="swatchSel(this,'skinGroup')" data-val="deep, dark skin tone"><div class="swatch" style="background:#5A2E0A"></div></div>
       </div>
     </div>
 
-    <!-- HAIR COLOUR swatches -->
     <div class="field">
       <label>Hair colour</label>
       <div class="swatch-wrap" id="hairColourGroup">
-        <div class="sw-item" data-label="Platinum" onclick="swatchSel(this,'hairColourGroup')" data-val="platinum blonde">
-          <div class="swatch" style="background:#F5E6C8"></div>
-        </div>
-        <div class="sw-item" data-label="Blonde" onclick="swatchSel(this,'hairColourGroup')" data-val="golden blonde">
-          <div class="swatch" style="background:#E8C86A"></div>
-        </div>
-        <div class="sw-item" data-label="Strawberry" onclick="swatchSel(this,'hairColourGroup')" data-val="strawberry blonde">
-          <div class="swatch" style="background:#D4956A"></div>
-        </div>
-        <div class="sw-item" data-label="Light Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="light brown">
-          <div class="swatch" style="background:#B07840"></div>
-        </div>
-        <div class="sw-item" data-label="Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="medium brown">
-          <div class="swatch" style="background:#7A4A20"></div>
-        </div>
-        <div class="sw-item" data-label="Dark Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="dark brown">
-          <div class="swatch" style="background:#3D2010"></div>
-        </div>
-        <div class="sw-item" data-label="Black" onclick="swatchSel(this,'hairColourGroup')" data-val="black">
-          <div class="swatch" style="background:#1A1008"></div>
-        </div>
-        <div class="sw-item" data-label="Auburn" onclick="swatchSel(this,'hairColourGroup')" data-val="auburn red">
-          <div class="swatch" style="background:#8B2500"></div>
-        </div>
-        <div class="sw-item" data-label="Red" onclick="swatchSel(this,'hairColourGroup')" data-val="bright red">
-          <div class="swatch" style="background:#C0392B"></div>
-        </div>
-        <div class="sw-item" data-label="White/Silver" onclick="swatchSel(this,'hairColourGroup')" data-val="white or silver">
-          <div class="swatch" style="background:#D8D8D8;border:1px solid #ccc"></div>
-        </div>
+        <div class="sw-item" data-label="White/Silver" onclick="swatchSel(this,'hairColourGroup')" data-val="white or silver"><div class="swatch" style="background:#D8D8D8;border:1px solid #ccc"></div></div>
+        <div class="sw-item" data-label="Blonde" onclick="swatchSel(this,'hairColourGroup')" data-val="golden blonde"><div class="swatch" style="background:#E8C86A"></div></div>
+        <div class="sw-item" data-label="Strawberry" onclick="swatchSel(this,'hairColourGroup')" data-val="strawberry blonde"><div class="swatch" style="background:#D4956A"></div></div>
+        <div class="sw-item" data-label="Light Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="light brown"><div class="swatch" style="background:#B07840"></div></div>
+        <div class="sw-item" data-label="Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="medium brown"><div class="swatch" style="background:#7A4A20"></div></div>
+        <div class="sw-item" data-label="Dark Brown" onclick="swatchSel(this,'hairColourGroup')" data-val="dark brown"><div class="swatch" style="background:#3D2010"></div></div>
+        <div class="sw-item" data-label="Black" onclick="swatchSel(this,'hairColourGroup')" data-val="black"><div class="swatch" style="background:#1A1008"></div></div>
+        <div class="sw-item" data-label="Auburn" onclick="swatchSel(this,'hairColourGroup')" data-val="auburn red"><div class="swatch" style="background:#8B2500"></div></div>
+        <div class="sw-item" data-label="Red" onclick="swatchSel(this,'hairColourGroup')" data-val="bright red"><div class="swatch" style="background:#C0392B"></div></div>
       </div>
     </div>
 
-    <!-- HAIR TEXTURE + LENGTH -->
     <div class="row2">
       <div class="field">
         <label>Hair texture</label>
         <div class="feat-row" id="hairTextureGroup">
-          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Straight</div>
-          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Wavy</div>
-          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Curly</div>
-          <div class="feat-pill" onclick="sp(this,'hairTextureGroup')">Coily</div>
+          <div class="feat-pill" onclick="spf(this,'hairTextureGroup')">Straight</div>
+          <div class="feat-pill" onclick="spf(this,'hairTextureGroup')">Wavy</div>
+          <div class="feat-pill" onclick="spf(this,'hairTextureGroup')">Curly</div>
+          <div class="feat-pill" onclick="spf(this,'hairTextureGroup')">Coily</div>
         </div>
       </div>
       <div class="field">
         <label>Hair length</label>
         <div class="feat-row" id="hairLengthGroup">
-          <div class="feat-pill" onclick="sp(this,'hairLengthGroup')">Short</div>
-          <div class="feat-pill" onclick="sp(this,'hairLengthGroup')">Medium</div>
-          <div class="feat-pill" onclick="sp(this,'hairLengthGroup')">Long</div>
+          <div class="feat-pill" onclick="spf(this,'hairLengthGroup')">Short</div>
+          <div class="feat-pill" onclick="spf(this,'hairLengthGroup')">Medium</div>
+          <div class="feat-pill" onclick="spf(this,'hairLengthGroup')">Long</div>
         </div>
       </div>
     </div>
 
-    <!-- HAIR STYLE extras — single select -->
     <div class="field">
       <label>Hair style <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — pick one)</span></label>
       <div class="feat-row" id="hairStyleGroup">
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Pigtails</div>
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Ponytail</div>
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Braids</div>
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Bun</div>
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Afro puffs</div>
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Fringe / Bangs</div>
-        <div class="feat-pill" onclick="sp(this,'hairStyleGroup')">Down &amp; loose</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Pigtails</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Ponytail</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Braids</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Bun</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Afro puffs</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Fringe / Bangs</div>
+        <div class="feat-pill" onclick="spf(this,'hairStyleGroup')">Down &amp; loose</div>
       </div>
     </div>
 
-    <!-- EYE COLOUR swatches -->
     <div class="field">
       <label>Eye colour</label>
       <div class="swatch-wrap" id="eyeGroup">
-        <div class="sw-item" data-label="Blue" onclick="swatchSel(this,'eyeGroup')" data-val="blue eyes">
-          <div class="swatch" style="background:#5B8DB8"></div>
-        </div>
-        <div class="sw-item" data-label="Light Blue" onclick="swatchSel(this,'eyeGroup')" data-val="light blue eyes">
-          <div class="swatch" style="background:#A8C8E8"></div>
-        </div>
-        <div class="sw-item" data-label="Green" onclick="swatchSel(this,'eyeGroup')" data-val="green eyes">
-          <div class="swatch" style="background:#4A8A5A"></div>
-        </div>
-        <div class="sw-item" data-label="Hazel" onclick="swatchSel(this,'eyeGroup')" data-val="hazel eyes">
-          <div class="swatch" style="background:#8B6914"></div>
-        </div>
-        <div class="sw-item" data-label="Light Brown" onclick="swatchSel(this,'eyeGroup')" data-val="light brown eyes">
-          <div class="swatch" style="background:#A0622A"></div>
-        </div>
-        <div class="sw-item" data-label="Dark Brown" onclick="swatchSel(this,'eyeGroup')" data-val="dark brown eyes">
-          <div class="swatch" style="background:#4A2800"></div>
-        </div>
-        <div class="sw-item" data-label="Grey" onclick="swatchSel(this,'eyeGroup')" data-val="grey eyes">
-          <div class="swatch" style="background:#8A9AA8"></div>
-        </div>
+        <div class="sw-item" data-label="Blue" onclick="swatchSel(this,'eyeGroup')" data-val="blue eyes"><div class="swatch" style="background:#5B8DB8"></div></div>
+        <div class="sw-item" data-label="Light Blue" onclick="swatchSel(this,'eyeGroup')" data-val="light blue eyes"><div class="swatch" style="background:#A8C8E8"></div></div>
+        <div class="sw-item" data-label="Green" onclick="swatchSel(this,'eyeGroup')" data-val="green eyes"><div class="swatch" style="background:#4A8A5A"></div></div>
+        <div class="sw-item" data-label="Hazel" onclick="swatchSel(this,'eyeGroup')" data-val="hazel eyes"><div class="swatch" style="background:#8B6914"></div></div>
+        <div class="sw-item" data-label="Light Brown" onclick="swatchSel(this,'eyeGroup')" data-val="light brown eyes"><div class="swatch" style="background:#A0622A"></div></div>
+        <div class="sw-item" data-label="Dark Brown" onclick="swatchSel(this,'eyeGroup')" data-val="dark brown eyes"><div class="swatch" style="background:#4A2800"></div></div>
+        <div class="sw-item" data-label="Grey" onclick="swatchSel(this,'eyeGroup')" data-val="grey eyes"><div class="swatch" style="background:#8A9AA8"></div></div>
       </div>
     </div>
 
-    <!-- EXTRA FEATURES — multi-select is fine here -->
     <div class="field">
       <label>Extra features <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — select all that apply)</span></label>
       <div class="feat-row" id="featuresGroup">
@@ -433,22 +395,29 @@ textarea{resize:vertical;min-height:70px}
         <div class="feat-pill msel" onclick="tp(this)">🩹 Always has a bandaid</div>
       </div>
     </div>
-
-    <div class="field"><label>Personality (3 words)</label><input type="text" id="personality" placeholder="e.g. curious, giggly, brave" maxlength="60"></div>
   </div>
 
-  <!-- THEIR WORLD -->
+  <!-- 🌍 THEIR WORLD -->
   <div class="section">
     <div class="section-title">🌍 Their World</div>
     <div class="row2">
-      <div class="field"><label>Favourite toy</label><input type="text" id="favToy" placeholder="e.g. stuffed elephant Ellie"></div>
-      <div class="field"><label>Pet (if any)</label><input type="text" id="pet" placeholder="e.g. Biscuit the dog"></div>
+      <div class="field"><label>Favourite toy <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="favToy" placeholder="e.g. stuffed elephant Ellie">
+      </div>
+      <div class="field"><label>Pet <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="pet" placeholder="e.g. Biscuit the dog">
+      </div>
     </div>
     <div class="row2">
-      <div class="field"><label>Best friend</label><input type="text" id="bestFriend" placeholder="e.g. Luca"></div>
-      <div class="field"><label>Favourite food</label><input type="text" id="favFood" placeholder="e.g. spaghetti"></div>
+      <div class="field"><label>Favourite food <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="favFood" placeholder="e.g. spaghetti">
+      </div>
+      <div class="field"><label>Other details <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="extra" placeholder="e.g. loves to jump, has a lisp">
+      </div>
     </div>
-    <div class="field"><label>Things they love <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(pick any — used as light flavour, not the plot)</span></label>
+    <div class="field">
+      <label>Things they love <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(pick any — used as light flavour, not the plot)</span></label>
       <div class="pill-group" id="hobbyGroup">
         <div class="pill msel" onclick="tp(this)">🦕 Dinosaurs</div>
         <div class="pill msel" onclick="tp(this)">🎨 Drawing</div>
@@ -461,34 +430,27 @@ textarea{resize:vertical;min-height:70px}
         <div class="pill msel" onclick="tp(this)">🌿 Nature</div>
         <div class="pill msel" onclick="tp(this)">🏗️ Building</div>
       </div>
-      <div class="hint">These add personality — e.g. a dinosaur on their shirt or a football under their arm. The story's plot comes from the occasion and setting, not these interests.</div>
+      <div class="hint">These add personality only — e.g. a dinosaur on their shirt. The story's plot comes from the occasion, not these interests.</div>
     </div>
-    <div class="field"><label>Anything extra?</label><textarea id="extra" placeholder="Fears, quirks, funny habits..." maxlength="200"></textarea></div>
   </div>
 
-  <!-- THE MOMENT -->
+  <!-- 🎉 THE MOMENT -->
   <div class="section">
     <div class="section-title">🎉 The Moment</div>
     <div class="field"><label>Occasion *</label>
-      <div class="pill-group" id="occasionGroup">
-        <div class="pill" onclick="sp(this,'occasionGroup')">🎂 Birthday</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">🎒 First Day of School</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">🎄 Christmas</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">👶 New Sibling</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">🏠 Moving House</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">🦷 Lost a Tooth</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">💛 Just Because</div>
-        <div class="pill" onclick="sp(this,'occasionGroup')">✏️ Other…</div>
-      </div>
+      <div class="pill-group" id="occasionGroup"></div>
+      <div id="occasionHint" style="font-size:0.72rem;color:var(--muted);margin-top:0.3rem"></div>
     </div>
     <div class="field" id="customOccField" style="display:none">
-      <label>Describe it</label><input type="text" id="customOcc" placeholder="e.g. Starting swimming lessons">
+      <label>Describe it</label>
+      <input type="text" id="customOcc" placeholder="e.g. Starting swimming lessons">
     </div>
     <div class="field">
       <label>Story tone *</label>
       <div class="tone-row" id="toneGroup"></div>
     </div>
-    <div class="field"><label>Setting</label>
+    <div class="field">
+      <label>Setting <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — leave blank for a warm, everyday world)</span></label>
       <div class="pill-group" id="settingGroup">
         <div class="pill" onclick="sp(this,'settingGroup')">🌲 Enchanted forest</div>
         <div class="pill" onclick="sp(this,'settingGroup')">🚀 Outer space</div>
@@ -497,26 +459,83 @@ textarea{resize:vertical;min-height:70px}
         <div class="pill" onclick="sp(this,'settingGroup')">🌊 Under the sea</div>
         <div class="pill" onclick="sp(this,'settingGroup')">🌈 Dreamland</div>
       </div>
+      <div class="hint">Leave unselected for a realistic, warm story set in the everyday world — a neighbourhood, a classroom, a home.</div>
     </div>
-    <div class="field"><label>Special message (woven into the ending)</label>
-      <textarea id="specialMsg" placeholder='e.g. "You are braver than you believe..."' maxlength="180"></textarea>
-    </div>
-    <div class="field"><label>Dedication line</label>
-      <input type="text" id="dedication" placeholder='e.g. "For our Matilda, on your very first day."' maxlength="100">
+    <div class="field">
+      <label>Special message <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(woven into the ending)</span></label>
+      <textarea id="specialMsg" placeholder='e.g. "You are braver than you believe"' maxlength="200"></textarea>
     </div>
   </div>
 
-  <!-- ORDER -->
+  <!-- 💌 THE GIFT -->
+  <div class="section">
+    <div class="section-title">💌 The Gift</div>
+    <div class="hint" style="margin-bottom:0.8rem">This creates a dedicated dedication page before the story starts. The gift giver may also appear in the story itself.</div>
+
+    <div class="field">
+      <label>This book is a gift from *</label>
+      <div class="pill-group" id="giftFromGroup">
+        <div class="pill" onclick="spGift(this,'Mum &amp; Dad')">👨‍👩‍👧 Mum &amp; Dad</div>
+        <div class="pill" onclick="spGift(this,'Mum')">💛 Mum</div>
+        <div class="pill" onclick="spGift(this,'Dad')">💙 Dad</div>
+        <div class="pill" onclick="spGift(this,'Grandma')">👵 Grandma</div>
+        <div class="pill" onclick="spGift(this,'Grandpa')">👴 Grandpa</div>
+        <div class="pill" onclick="spGift(this,'Nana &amp; Pop')">🧓 Nana &amp; Pop</div>
+        <div class="pill" onclick="spGift(this,'The whole family')">🏠 The whole family</div>
+        <div class="pill" onclick="spGift(this,'__custom__')">✏️ Other…</div>
+      </div>
+    </div>
+    <div class="field" id="giftFromCustomField" style="display:none">
+      <label>Their name(s) as they should appear in the book</label>
+      <input type="text" id="giftFromCustom" placeholder='e.g. "Auntie Claire &amp; Uncle Tom"'>
+    </div>
+
+    <div class="field">
+      <label>Their relationship to <span id="giftRelLabel">the child</span></label>
+      <div class="feat-row" id="giftRelGroup">
+        <div class="feat-pill" onclick="spf(this,'giftRelGroup')">Parent(s)</div>
+        <div class="feat-pill" onclick="spf(this,'giftRelGroup')">Grandparent(s)</div>
+        <div class="feat-pill" onclick="spf(this,'giftRelGroup')">Aunt / Uncle</div>
+        <div class="feat-pill" onclick="spf(this,'giftRelGroup')">Family friend</div>
+        <div class="feat-pill" onclick="spf(this,'giftRelGroup')">Sibling</div>
+        <div class="feat-pill" onclick="spf(this,'giftRelGroup')">Other</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Appear in the story? <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(one warm moment near the end)</span></label>
+      <div class="feat-row" id="giftAppearGroup">
+        <div class="feat-pill" onclick="spf(this,'giftAppearGroup')">Yes — one moment in the story</div>
+        <div class="feat-pill" onclick="spf(this,'giftAppearGroup')">Illustration only</div>
+        <div class="feat-pill" onclick="spf(this,'giftAppearGroup')">Dedication page only</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Dedication line <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(appears on the opening page)</span></label>
+      <input type="text" id="dedication" placeholder='e.g. "For our big strong girl, on your very first day."' maxlength="120">
+      <div class="hint">This becomes the dedication page before the story starts — one of the most emotional moments in the book.</div>
+    </div>
+
+    <div class="field">
+      <label>Anyone else to feature? <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional)</span></label>
+      <input type="text" id="extraChars" placeholder='e.g. "baby sister Rosie, dog called Biscuit"' maxlength="100">
+      <div class="hint">These can appear briefly in the story or illustrations. Keep it to 1–2 people or animals.</div>
+    </div>
+  </div>
+
+  <!-- 📚 ORDER DETAILS -->
   <div class="section">
     <div class="section-title">📚 Order Details</div>
     <div class="row2">
-      <div class="field"><label>Your name</label><input type="text" id="parentName" placeholder="Sarah & James"></div>
-      <div class="field"><label>Email *</label><input type="email" id="email" placeholder="your@email.com"></div>
-    </div>
-    <div class="field"><label>Format</label>
-      <div class="pill-group" id="formatGroup">
-        <div class="pill sel" onclick="sp(this,'formatGroup')" id="fmt-soft">📖 Softcover — $65</div>
-        <div class="pill" onclick="sp(this,'formatGroup')" id="fmt-hard">📕 Hardcover — $95</div>
+      <div class="field"><label>Your email *</label>
+        <input type="email" id="email" placeholder="your@email.com">
+      </div>
+      <div class="field"><label>Format</label>
+        <div class="pill-group" id="formatGroup">
+          <div class="pill sel" onclick="sp(this,'formatGroup')" id="fmt-soft">📖 Softcover — $69</div>
+          <div class="pill" onclick="sp(this,'formatGroup')" id="fmt-hard">📕 Hardcover — $99</div>
+        </div>
       </div>
     </div>
   </div>
@@ -525,6 +544,7 @@ textarea{resize:vertical;min-height:70px}
     ✨ Generate My Book
   </button>
 </div>
+
 
 <!-- ═══════════════ RIGHT: PIPELINE ═══════════════ -->
 <div class="pipeline-side" id="pipelinePanel">
@@ -544,20 +564,32 @@ textarea{resize:vertical;min-height:70px}
       <div class="stage-check" id="s1-check"></div>
     </div>
     <div class="stage" id="s2">
-      <div class="stage-icon">🎨</div>
-      <div class="stage-body"><div class="stage-name">Generating illustrations</div><div class="stage-status" id="s2-status">Stable Diffusion (Replicate) will illustrate each page</div></div>
+      <div class="stage-icon">🧬</div>
+      <div class="stage-body"><div class="stage-name">Character seed</div><div class="stage-status" id="s2-status">SDXL generates one reference portrait to lock appearance</div></div>
       <div class="stage-check" id="s2-check"></div>
     </div>
     <div class="stage" id="s3">
-      <div class="stage-icon">📐</div>
-      <div class="stage-body"><div class="stage-name">Assembling proof</div><div class="stage-status" id="s3-status">Layout will be prepared for review</div></div>
+      <div class="stage-icon">🎨</div>
+      <div class="stage-body"><div class="stage-name">Page illustrations</div><div class="stage-status" id="s3-status">Recraft V3 illustrates 12 pages with locked Storyborn style</div></div>
       <div class="stage-check" id="s3-check"></div>
     </div>
     <div class="stage" id="s4">
-      <div class="stage-icon">✅</div>
-      <div class="stage-body"><div class="stage-name">Ready for review</div><div class="stage-status" id="s4-status">Awaiting your approval</div></div>
+      <div class="stage-icon">📐</div>
+      <div class="stage-body"><div class="stage-name">Assembling proof</div><div class="stage-status" id="s4-status">Layout prepared for review</div></div>
       <div class="stage-check" id="s4-check"></div>
     </div>
+    <div class="stage" id="s5">
+      <div class="stage-icon">✅</div>
+      <div class="stage-body"><div class="stage-name">Ready for review</div><div class="stage-status" id="s5-status">Awaiting your approval</div></div>
+      <div class="stage-check" id="s5-check"></div>
+    </div>
+  </div>
+
+  <!-- Character seed preview -->
+  <div id="characterSeedWrap" style="display:none;margin-bottom:1rem;background:var(--soft);border:1.5px solid var(--border);border-radius:10px;overflow:hidden">
+    <div style="padding:0.5rem 0.8rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">🧬 Seeds — locked for all 12 pages</div>
+    <div id="characterSeedInfo" style="display:none;padding:0.5rem 0.8rem;border-top:1px solid var(--border);background:var(--bg)"></div>
+    <img id="characterSeedImg" src="" alt="Character seed" style="display:none;width:100%;max-height:220px;object-fit:contain;background:white">
   </div>
 
   <!-- Idle state -->
@@ -599,14 +631,36 @@ function swatchSel(el, g) {
   el.classList.add('sel');
 }
 function sp(el, g) {
+  // Single-select for .pill groups — no toggle off
   document.querySelectorAll(`#${g} .pill`).forEach(p => p.classList.remove('sel'));
   el.classList.add('sel');
   if (g === 'occasionGroup') v$('customOccField').style.display = el.textContent.includes('Other') ? 'block' : 'none';
 }
+function spf(el, g) {
+  // Single-select for .feat-pill groups — clicking selected item toggles it off
+  const already = el.classList.contains('sel');
+  document.querySelectorAll(`#${g} .feat-pill`).forEach(p => p.classList.remove('sel'));
+  if (!already) el.classList.add('sel');
+}
 function tp(el) { el.classList.toggle('sel'); }
+function spGift(el, val) {
+  // Single-select for gift-from group, also shows/hides custom field
+  document.querySelectorAll('#giftFromGroup .pill').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  const customField = document.getElementById('giftFromCustomField');
+  if (customField) customField.style.display = val === '__custom__' ? 'block' : 'none';
+  // Update relationship label with child name
+  const childName = document.getElementById('childName')?.value || 'the child';
+  const lbl = document.getElementById('giftRelLabel');
+  if (lbl) lbl.textContent = childName || 'the child';
+}
 function st(el) { document.querySelectorAll('.tone-card').forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
 function v$(id) { return document.getElementById(id); }
-function pv(g) { const e = document.querySelector(`#${g} .pill.sel`); return e ? e.textContent.replace(/[^\w\s\/,\-']/gu,'').trim() : ''; }
+function pv(g) {
+  // Read from either .pill or .feat-pill single-select groups
+  const e = document.querySelector(`#${g} .pill.sel`) || document.querySelector(`#${g} .feat-pill.sel`);
+  return e ? e.textContent.replace(/[^\w\s\/,\-'&]/gu,'').trim() : '';
+}
 function swatchVal(g) {
   const el = document.querySelector(`#${g} .sw-item.sel`);
   return el ? el.dataset.val : '';
@@ -629,107 +683,685 @@ function setStage(i, state, msg) {
                : state === 'error'  ? '❌' : '';
 }
 
+// ══════════════════════════════════════════════════════════════
+//  STORYBORN — WEIGHTED PROMPT ARCHITECTURE v4
+//
+//  Tier 1 (foundation):   occasion, name/age, tone, special message
+//  Tier 2 (spine):        personality, gift giver, setting, weather
+//  Tier 3 (colour):       toy, pet, food, hobbies — 1 mention max each
+//  Tier 4 (illustrations only): ALL appearance fields — never in story text
+// ══════════════════════════════════════════════════════════════
+
 // ─────────────────────────────────────────────
 //  GATHER ORDER DATA
 // ─────────────────────────────────────────────
 function gatherOrder() {
   const occ = document.querySelector('#occasionGroup .pill.sel');
-  const occasion = occ ? (occ.textContent.includes('Other') ? v('customOcc') : occ.textContent.replace(/[^\w\s]/gu,'').trim()) : '';
+  const occasion = occ
+    ? (occ.textContent.includes('Other') ? v('customOcc') : occ.textContent.replace(/[^\w\s]/gu,'').trim())
+    : '';
+
+  const giftPill = document.querySelector('#giftFromGroup .pill.sel');
+  let giftFrom = '';
+  if (giftPill) {
+    const pt = giftPill.textContent.replace(/[^\w\s&]/gu,'').trim();
+    giftFrom = (pt === 'Other' || pt.includes('custom')) ? v('giftFromCustom') : pt;
+  }
+
   return {
-    name:        v('childName'),
-    age:         v('childAge'),
-    pronouns:    pv('pronounGroup') || 'they/them',
+    // Tier 1 — Foundation
+    name:         v('childName'),
+    age:          v('childAge'),
+    occasion,
+    tone:         tv(),
+    specialMsg:   v('specialMsg'),
+    // Tier 2 — Spine
+    personality:  v('personality') || 'curious and kind',
+    giftFrom,
+    giftRelation: pv('giftRelGroup') || '',
+    giftAppear:   pv('giftAppearGroup') || 'Dedication page only',
+    dedication:   v('dedication'),
+    setting:      pv('settingGroup') || '',
+    // Tier 3 — Colour
+    toy:          v('favToy'),
+    pet:          v('pet'),
+    food:         v('favFood'),
+    hobbies:      mpv('hobbyGroup'),
+    extra:        v('extra'),
+    extraChars:   v('extraChars'),
+    // Tier 4 — Illustration only
+    pronouns:    pv('pronounGroup') || 'They / Them',
+    skin:        swatchVal('skinGroup') || 'medium skin tone',
     hairColour:  swatchVal('hairColourGroup') || 'brown',
     hairTexture: pv('hairTextureGroup') || '',
     hairLength:  pv('hairLengthGroup') || '',
-    hairStyle:   pv('hairStyleGroup'),
-    skin:        swatchVal('skinGroup') || 'medium skin tone',
+    hairStyle:   pv('hairStyleGroup') || '',
     eyes:        swatchVal('eyeGroup') || 'brown eyes',
     features:    mpFeatVal('featuresGroup'),
-    personality: v('personality') || 'curious and kind',
-    toy:         v('favToy'),
-    pet:         v('pet'),
-    friend:      v('bestFriend'),
-    food:        v('favFood'),
-    hobbies:     mpv('hobbyGroup'),
-    extra:       v('extra'),
-    occasion,
-    tone:        tv(),
-    setting:     pv('settingGroup') || 'a magical world',
-    specialMsg:  v('specialMsg'),
-    dedication:  v('dedication'),
+    // Order
     email:       v('email'),
-    parentName:  v('parentName'),
+    format:      pv('formatGroup') || 'Softcover',
   };
 }
 
 // ─────────────────────────────────────────────
-//  BUILD STORY PROMPT
+//  PRONOUN MAP
 // ─────────────────────────────────────────────
-function buildStoryPrompt(o) {
-  const pm = { 'She / Her': {s:'she',o:'her',p:'her',r:'herself'}, 'He / Him': {s:'he',o:'him',p:'his',r:'himself'}, 'They / Them': {s:'they',o:'them',p:'their',r:'themselves'} };
-  const pr = pm[o.pronouns] || pm['They / Them'];
+function getPronounMap(pronouns) {
+  const pm = {
+    'She / Her':   { s:'she',  o:'her',  p:'her',   r:'herself'   },
+    'He / Him':    { s:'he',   o:'him',  p:'his',   r:'himself'   },
+    'They / Them': { s:'they', o:'them', p:'their', r:'themselves' },
+  };
+  return pm[pronouns] || pm['They / Them'];
+}
 
-  // Supporting characters — these get roles in the story
-  const supports = [
-    o.toy    && `${o.toy} (favourite toy — can appear as a companion)`,
-    o.pet    && `${o.pet} (pet — give them a small role if it fits naturally)`,
-    o.friend && `${o.friend} (best friend — can appear as a supporting character)`
-  ].filter(Boolean);
+// ─────────────────────────────────────────────
+//  WEATHER & PLACE PALETTE
+//  Maps occasion + tone to joyful real-world
+//  settings. Weather mirrors emotion.
+// ─────────────────────────────────────────────
+function getWeatherAndPlace(o) {
+  const tone = o.tone || '';
 
-  // World details — flavour only, NOT plot drivers
-  const worldFlavour = [
-    o.food   && `favourite food: ${o.food}`,
-    o.hobbies && `interests: ${o.hobbies}`,
-    o.extra
-  ].filter(Boolean);
-
-  const ageGroup = getAgeGroup(o.age);
-  const ageNote = ageGroup === 'kids'
-    ? `Simple vocabulary for a ${o.age}-year-old. Short sentences, musical rhythm, reads aloud beautifully.`
-    : ageGroup === 'teen'
-    ? `Voice appropriate for a ${o.age}-year-old teenager. Authentic, not condescending.`
-    : `Sophisticated language for an adult reader. Rich prose, emotional depth.`;
-
-  const toneGuide = {
-    'Funny & Silly':      'Include at least 2 moments of physical comedy or wordplay. Light, bouncy sentences.',
-    'Funny & Relatable':  'Lean into relatable awkwardness and in-jokes. Self-aware humour that teens recognise.',
-    'Funny & Witty':      'Sharp, clever wit. Dry observations. Adult humour that rewards re-reading.',
-    'Warm & Heartfelt':   'Prioritise emotional warmth. Every page should feel like a hug.',
-    'Heartfelt':          'Honest and emotionally intelligent. Does not shy away from complexity.',
-    'Warm & Nostalgic':   'Evocative and sentimental. Rich sensory detail that transports the reader.',
-    'Big Adventure':      'High energy, active verbs, sense of momentum. Heroic and exciting.',
-    'Epic Adventure':     'Cinematic scale. High stakes. The protagonist feels genuinely powerful.',
-    'Celebratory':        'Joyful, effervescent, toast-worthy. Every page should make you smile.',
-    'Inspirational':      'Empowering and forward-looking. Leaves the reader feeling seen and capable.',
+  const placesByOccasion = {
+    'Birthday':             ['at home with the kitchen smelling of cake', 'in the backyard with bunting in the trees', 'at a favourite park with a picnic blanket'],
+    'First Day of School':  ['on the front doorstep in the early morning', 'walking along a familiar street to school', 'at the school gate with dew still on the grass'],
+    'Christmas':            ['at home with the tree glowing in the corner', 'in a warm kitchen on Christmas morning', 'in the backyard on a cool bright summer morning'],
+    'New Sibling':          ['in the quiet of the living room', 'in a warm sunlit bedroom', 'in the garden on a soft afternoon'],
+    'Moving House':         ['in a car watching familiar streets slide past', 'in an empty room full of cardboard boxes', 'arriving at a new front door for the first time'],
+    'Lost a Tooth':         ['at home at bedtime', 'in front of the bathroom mirror', 'tucked under the covers as night falls'],
+    'Easter':               ['in the garden in the early morning light', 'in the backyard with dewy grass underfoot', 'at a favourite park in golden autumn sunshine'],
+    'Just Because':         ['at a sunny cafe with warm drinks', 'at the park on a golden afternoon', 'at home on a cosy rainy afternoon'],
+    'Retirement':           ['in a beloved garden', 'at a favourite cafe', 'at home surrounded by family'],
+    'Graduation':           ['in a sunny park', 'at a family celebration at home', 'walking across a sunlit open space'],
+    'New Baby':             ['in a warm, soft bedroom', 'in the living room in the morning light', 'in the garden on a still afternoon'],
+    'New Home':             ['on the front path of the new house', 'in the empty new living room', 'in the new backyard for the first time'],
   };
 
-  const hairFullDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair', o.hairStyle ? `(${o.hairStyle})` : ''].filter(Boolean).join(' ');
-  const appearanceDesc = `${o.skin}, ${o.eyes}, ${hairFullDesc}${o.features ? ', ' + o.features : ''}`;
+  const weatherByTone = {
+    'Warm & Heartfelt':  'The sun is low and golden, casting long warm shadows. The air is still and soft.',
+    'Funny & Silly':     'The sky is bright blue and ridiculous — the kind of day where anything could happen.',
+    'Big Adventure':     'The morning is crisp and full of possibility. A breeze moves through the trees like a whispered dare.',
+    'Funny & Relatable': 'Overcast but warm — the kind of comfortable grey that feels like a soft blanket.',
+    'Heartfelt':         'A quiet clear afternoon. The light has that golden quality that makes everything feel a little precious.',
+    'Celebratory':       'Bright, warm, impossibly blue-skied. The kind of day that feels like it was made for today.',
+    'Inspirational':     'A clear morning with light that feels like it is leaning in close, paying attention.',
+    'Warm & Nostalgic':  'Golden hour. Long shadows. The kind of light that makes you want to remember everything.',
+    'Epic Adventure':    'The sky is enormous and the air is electric, like the world is holding its breath.',
+    'Funny & Witty':     'A perfectly ordinary day that has decided, against all probability, to be extraordinary.',
+  };
 
-  return `You are a warm, imaginative children's book author. Write a personalised picture book story using the details below. Output ONLY the story — no commentary, no preamble.
+  const occasionKey = Object.keys(placesByOccasion).find(k =>
+    o.occasion && o.occasion.toLowerCase().includes(k.toLowerCase())
+  );
+  const places = placesByOccasion[occasionKey] || ['at home', 'in the garden', 'at a favourite park'];
+  const weather = weatherByTone[tone] || 'The day feels warm and full of quiet promise.';
 
-CHILD: ${o.name}, age ${o.age}. Pronouns: ${pr.s}/${pr.o}/${pr.p}. Appearance: ${appearanceDesc}. Personality: ${o.personality}.
+  return { places, weather };
+}
 
+// ─────────────────────────────────────────────
+//  BUILD STORY PROMPT — fully weighted
+// ─────────────────────────────────────────────
+function buildStoryPrompt(o) {
+  const pr = getPronounMap(o.pronouns);
+  const age = parseInt(o.age) || 5;
+  const { places, weather } = getWeatherAndPlace(o);
+
+  // Age-adaptive format
+  const useRhyme = age <= 7;
+  let formatRule, wordBudget;
+  if (age <= 4) {
+    formatRule = 'AABB rhyming couplets. Exactly 2 couplets per page (4 lines). MAX 7 words per line — strictly enforced. Ultra simple. Every word must earn its place. Singable by a toddler.';
+    wordBudget = 'STRICT target: 150-220 words total. This is a board book for a toddler. Short is better. Do not exceed 220 words.';
+  } else if (age <= 7) {
+    formatRule = 'AABB rhyming couplets. Exactly 2 couplets per page (4 lines). Max 10 words per line. Warm, musical, reads aloud beautifully.';
+    wordBudget = '~300-400 words total across all 12 pages.';
+  } else if (age <= 12) {
+    formatRule = '2-3 sentences per page. Rich vocabulary. Clear and engaging. Prose only — no rhyme.';
+    wordBudget = '~400-600 words total across all 12 pages.';
+  } else {
+    formatRule = '3-5 sentences per page. Sophisticated prose. Emotional depth. Literary quality. No rhyme.';
+    wordBudget = '~700-1000 words total across all 12 pages.';
+  }
+
+  // Tone guide
+  const toneGuide = {
+    'Funny & Silly':     'At least 2 moments of physical comedy or wordplay. Light and bouncy throughout.',
+    'Funny & Relatable': 'Relatable awkwardness and gentle self-aware humour. Feels true, not forced.',
+    'Funny & Witty':     'Sharp wit. Dry observations. Rewards re-reading.',
+    'Warm & Heartfelt':  'Every page should feel like a hug. Warmth over action at every turn.',
+    'Heartfelt':         'Emotionally honest. Does not shy from complexity.',
+    'Warm & Nostalgic':  'Evocative and sentimental. Rich sensory detail. Makes you want to remember.',
+    'Big Adventure':     'High energy. Active verbs. Sense of momentum. The child is bold and brave.',
+    'Epic Adventure':    'Cinematic scale. The child feels genuinely powerful and capable.',
+    'Celebratory':       'Joyful and effervescent. Every page should make you smile wider.',
+    'Inspirational':     'Empowering and forward-looking. The reader feels capable and loved.',
+  };
+
+  // Gift giver — Claude decides placement based on occasion
+  let giftGiverBlock = '';
+  if (o.giftFrom && o.giftAppear === 'Yes — one moment in the story') {
+    giftGiverBlock = `
+GIFT GIVER: ${o.giftFrom} (${o.giftRelation || 'loved one'}).
+Appear ONCE — naturally, where the occasion genuinely calls for their presence.
+At Christmas: part of the morning warmth around the tree.
+At a birthday: cheering at the party, candles glowing.
+At school drop-off: the hand that lets go at the gate.
+At a tooth loss: the voice through the bedroom door before the fairy arrives.
+If the occasion does not naturally call for them, leave them out entirely.
+One warm moment only. Not a main character. This is ${o.name}'s story.`;
+  }
+
+  // Setting block — always real world, always joyful
+  const settingBlock = o.setting
+    ? `SETTING: ${o.setting.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\s]*/u, '')} — grounded, real, warm and familiar.`
+    : `SETTING: A real, joyful everyday place — ${places.join(', or ')}.
+No fantasy worlds. No magic environments. The wonder lives in the emotion, not the location.`;
+
+  // Tier 3 — Their World is ILLUSTRATION ONLY — never in story text
+  // These details appear as visual props in illustrations, not as story plot
+  // The story is driven by occasion + personality + tone only
+  // Claude invents the narrative — Their World details do NOT influence the plot
+  const tier3 = []; // intentionally empty — world details removed from story prompt
+
+  // Special message
+  const specialMsgBlock = o.specialMsg
+    ? `SPECIAL MESSAGE: "${o.specialMsg}"
+Do NOT quote this directly. Do NOT state it as a lesson.
+Let it live in the feeling of the final pages — a quiet realisation, not a declaration.`
+    : '';
+
+  const rhymeRule = useRhyme
+    ? 'RHYME: AABB throughout every page. Every couplet must scan naturally when read aloud. Check every line.'
+    : 'PROSE: No rhyme. Rhythm and cadence matter deeply — read each sentence aloud as you write it.';
+
+  return `You are a master children's book author writing at the highest level of the craft.
+Write a completely unique personalised picture book story.
+Output ONLY the story pages — no title, no author note, no commentary.
+
+════════ TIER 1: THE FOUNDATION ════════
+CHILD: ${o.name}, age ${age}. Personality: ${o.personality}.
 OCCASION: ${o.occasion}
+This is the beating heart of the story. Every page serves this moment.
 TONE: ${o.tone}${toneGuide[o.tone] ? ' — ' + toneGuide[o.tone] : ''}
-SETTING: ${o.setting}
-${o.specialMsg ? `SPECIAL MESSAGE (weave naturally into the ending, do not quote directly): "${o.specialMsg}"` : ''}
-${supports.length ? `\nSUPPORTING CHARACTERS (use naturally where they fit):\n${supports.join('\n')}` : ''}
-${worldFlavour.length ? `\nCHARACTER FLAVOUR — use these as light background colour only. They should feel natural when they appear, not dominate the story. One or two brief mentions at most:\n${worldFlavour.join(' | ')}` : ''}
+${specialMsgBlock}
 
-STRUCTURE — write exactly 10 pages. Format each as "Page N: [text]". Keep each page to 2–3 sentences max. ${ageNote}
+════════ TIER 2: THE SPINE ════════
+${settingBlock}
 
-Page 1–2: Introduce ${o.name} in their world. Establish their personality immediately through action, not description.
-Page 3–4: A challenge or exciting opportunity tied to the occasion arises.
-Page 5–7: The adventure unfolds in ${o.setting}. The setting drives the story — not their interests.
-Page 8–9: A moment of doubt or funny mishap — then ${o.name} finds their own inner strength.
-Page 10: A warm, joyful ending. The special message lives in the feeling of the page, not in quoted words.
+WEATHER RULE — CRITICAL:
+Weather is the ILLUSTRATOR'S tool, not yours. Do NOT write sentences about weather, light, sunshine, breeze, or atmosphere.
+If weather must appear, it is ONE embedded word or phrase woven into action — never a standalone observation.
+WRONG: "The golden sunlight filters gently through." (dedicated weather sentence — forbidden)
+WRONG: "The air feels warm and soft and new." (pure atmosphere — forbidden)  
+RIGHT: "She ran barefoot through the dewy grass." (weather implied through action — allowed)
+RIGHT: "They sat in the warm kitchen." (setting implied — allowed)
+The emotional atmosphere comes from CHARACTER and ACTION, not weather description.
+${giftGiverBlock}
 
-IMPORTANT: The story's heart is the OCCASION and the CHILD'S CHARACTER — not their hobbies or interests. Interests can appear as brief colour (a dinosaur on their shirt, a football they're carrying) but should never become the plot. The adventure comes from who they are and what they're celebrating.
+════════ FORMAT (non-negotiable) ════════
+Write exactly 12 pages. Label each "Page N:"
+${formatRule}
+${wordBudget}
+${rhymeRule}
+CRITICAL: Do NOT describe ${o.name}'s physical appearance (hair, eyes, skin, height).
+The illustrator handles all of this. Your job is emotion and character, not description.
+Write for the parent reading aloud as much as for the child listening.
+
+════════ STORY ARCHITECTURE ════════
+Page 1:  ${o.name} in motion — action that immediately reveals personality. Not description.
+Page 2:  Their everyday world. Warm, grounded, familiar. Establish emotional atmosphere.
+Page 3:  The occasion arrives or approaches. A feeling stirs — anticipation, excitement, nerves.
+Page 4:  The first real moment of the occasion. Something small and specific and true.
+Page 5:  The occasion deepens. ${o.name} does something specific and joyful tied to the occasion.
+Page 6:  A moment of connection — with a place, an object, a feeling. Rich and specific.
+Page 7:  Something small doesn't go to plan. A human wobble. Not a crisis — a moment of feeling.
+Page 8:  ${o.name} faces the wobble. Alone for a breath. Their personality carries them through.
+Page 9:  The turn. Something shifts emotionally. The occasion finds its deeper meaning.
+Page 10: The emotional peak of the whole story. The biggest feeling. Let it breathe. Let it land.
+Page 11: Warm resolution. The occasion concludes with joy.${o.giftFrom && o.giftAppear === 'Yes — one moment in the story' ? ` If the occasion calls for it naturally, ${o.giftFrom} is here.` : ''}
+Page 12: A quiet, tender final page. The special message lives in the feeling, not the words. End with love.
 
 Write the story now:`;
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  SEED ARCHITECTURE v3 — FULL VISUAL LOCK
+//  Everything that can be described is described once,
+//  locked precisely, and repeated verbatim in every prompt.
+//  No ambiguity = no creative interpretation = consistency.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ─────────────────────────────────────────────
+//  FEATURE LOCK — converts every selected feature
+//  into a hyper-specific locked description.
+//  These strings are embedded in EVERY prompt.
+// ─────────────────────────────────────────────
+function buildFeatureLock(o) {
+  const locks = [];
+
+  // Hair style — specific position and size
+  if (o.hairStyle) {
+    const styleMap = {
+      'Pigtails':      'two symmetrical pigtails tied with matching small ribbons, one on each side — identical position every page',
+      'Ponytail':      'single ponytail tied at the back of the head with a small ribbon — identical every page',
+      'Braids':        'two neat braids hanging forward over the shoulders — identical every page',
+      'Bun':           'single neat bun at the crown of the head — identical every page',
+      'Afro puffs':    'two symmetrical afro puffs, one on each side of the head — identical every page',
+      'Fringe / Bangs':'straight fringe cut across the forehead — identical every page',
+      'Down & loose':  'hair worn completely down and loose — identical every page',
+    };
+    locks.push(styleMap[o.hairStyle] || o.hairStyle + ' — identical every page');
+  }
+
+  // Extra features — each one is hyper-specific
+  if (o.features) {
+    const featureMap = {
+      'Glasses':            'round wire-frame glasses with gold rims resting on nose — worn in every single illustration without exception',
+      'Freckles':           'small light freckles scattered across the nose and both cheeks — visible in every illustration',
+      'Dimples':            'deep dimples in both cheeks — clearly visible whenever mouth is open or smiling',
+      'Missing tooth':      'upper front LEFT incisor is missing — gap clearly visible whenever mouth is open, smiling, or talking, on every single page',
+      'Hair bow':           'one small ribbon bow clipped to the right side of the head near the temple — same bow, same position, every page',
+      'Birthmark':          'small oval birthmark on the left cheek — visible in every illustration',
+      'Always has a bandaid':'a single small bandaid on the right knee — visible whenever legs are shown',
+    };
+
+    o.features.split(',').forEach(function(f) {
+      const clean = f.replace(/[^\w\s]/g, '').trim();
+      const match = Object.keys(featureMap).find(function(k) {
+        return clean.toLowerCase().indexOf(k.toLowerCase().replace(/[^\w\s]/g,'')) >= 0;
+      });
+      if (match) locks.push(featureMap[match]);
+      else if (clean) locks.push(clean + ' — visible in every illustration');
+    });
+  }
+
+  return locks;
+}
+
+// ─────────────────────────────────────────────
+//  CHARACTER SEED — face + hair + features
+// ─────────────────────────────────────────────
+function buildCharacterSeed(o) {
+  const age = parseInt(o.age) || 5;
+
+  const ageDesc = age <= 2  ? 'baby toddler aged ' + age + ', very chubby cheeks, tiny round face, infant proportions'
+                : age <= 4  ? 'toddler aged ' + age + ', chubby round cheeks, small nose, large eyes relative to face'
+                : age <= 6  ? 'young child aged ' + age + ', rounded soft face, small childlike proportions'
+                : age <= 10 ? 'child aged ' + age + ', school-age proportions, not a teenager'
+                : age <= 13 ? 'preteen aged ' + age + ', not yet a teenager'
+                : age <= 17 ? 'teenager aged ' + age
+                :             'adult aged ' + age;
+
+  const hairParts = [
+    o.hairLength  || '',
+    o.hairTexture || '',
+    o.hairColour  || 'brown',
+    'hair',
+  ].filter(Boolean);
+  const hairDesc = hairParts.join(' ');
+
+  const featureLocks = buildFeatureLock(o);
+  const featureDesc = featureLocks.length ? '. ' + featureLocks.join('. ') : '';
+
+  return ageDesc + ', ' + (o.skin || 'medium skin tone') + ', ' + (o.eyes || 'brown eyes') + ', ' + hairDesc + featureDesc;
+}
+
+// ─────────────────────────────────────────────
+//  OUTFIT SEED — occasion-locked clothing
+//  Every detail named. Zero ambiguity.
+// ─────────────────────────────────────────────
+function buildOutfitSeed(o) {
+  const occasion = (o.occasion || '').toLowerCase();
+  const pr       = o.pronouns  || 'They / Them';
+  const isShe    = pr === 'She / Her';
+  const isHe     = pr === 'He / Him';
+
+  const outfits = {
+    birthday: {
+      she: 'bright coral-pink party dress with a white peter pan collar and full skirt, white frilly ankle socks, small black Mary Jane shoes with a single strap, and a matching coral ribbon tied in her hair',
+      he:  'a white collared birthday shirt with short sleeves, navy blue shorts with a thin belt, white ankle socks, and clean white trainers',
+      they:'a cheerful yellow party top with white trousers, white ankle socks, and clean white shoes',
+    },
+    'first day of school': {
+      she: 'a navy blue school dress with a white collar, white ankle socks with a small frill at the top, clean black school shoes with a velcro strap, and a small red school backpack worn on both shoulders',
+      he:  'a white school shirt tucked neatly into navy blue shorts, a thin navy belt, white ankle socks, clean black school shoes, and a small red school backpack worn on both shoulders',
+      they:'a navy blue school top and trousers, white ankle socks, clean black school shoes, and a small red school backpack',
+    },
+    christmas: {
+      she: 'a red A-line dress with a white peter pan collar, green belt with a square gold buckle, white fur trim on the hem and cuffs, white frilly ankle socks, and red Mary Jane shoes — this exact outfit on every page',
+      he:  'red and white Christmas pyjamas with a classic candy-cane stripe pattern, fluffy white slipper socks — this exact outfit on every page',
+      they:'red and white Christmas pyjamas with a classic pattern, fluffy white slipper socks — this exact outfit on every page',
+    },
+    'new sibling': {
+      she: 'a soft pale yellow top with small flower buttons and pastel pink leggings, white ankle socks, and soft pink slippers',
+      he:  'a soft blue striped t-shirt and grey jogger pants, white ankle socks, and soft grey slippers',
+      they:'soft pastel home clothes — a cream top and pale grey leggings, bare feet',
+    },
+    'moving house': {
+      she: 'a white and navy striped t-shirt, dark denim shorts, white trainers with velcro straps, and hair pulled back',
+      he:  'a plain light blue t-shirt, khaki cargo shorts, and white trainers with velcro straps',
+      they:'a striped t-shirt, comfortable shorts, and white trainers',
+    },
+    'lost a tooth': {
+      she: 'soft pink pyjamas with small white star pattern, fluffy pink slippers, and hair loosely down',
+      he:  'soft blue pyjamas with small cloud pattern, fluffy blue slippers',
+      they:'soft pastel pyjamas with a simple pattern, fluffy slippers',
+    },
+    easter: {
+      she: 'a soft lemon yellow dress with a white collar and small button details, white ankle socks, and small white strap sandals',
+      he:  'a light sky-blue shirt with small collar, beige chino shorts, white ankle socks, and clean brown sandals',
+      they:'a soft pastel yellow and white spring outfit, white ankle socks, and sandals',
+    },
+    'just because': {
+      she: 'a bright teal top with a small embroidered flower, white shorts, white ankle socks, and clean white trainers',
+      he:  'a bright orange t-shirt, dark blue shorts, white ankle socks, and clean white trainers',
+      they:'a colourful comfortable everyday outfit, white ankle socks, and clean trainers',
+    },
+    graduation: {
+      she: 'a smart navy blue dress with white trim, white ankle socks, and polished black shoes',
+      he:  'a smart white collared shirt, navy trousers, and polished black shoes',
+      they:'a smart navy and white celebration outfit and polished shoes',
+    },
+    retirement: {
+      she: 'a comfortable floral dress in warm peach and cream tones, a soft cream cardigan, and low comfortable cream shoes',
+      he:  'a comfortable light blue collared shirt, beige trousers, and comfortable brown loafers',
+      they:'comfortable warm-toned smart casual clothes and comfortable shoes',
+    },
+  };
+
+  const key = Object.keys(outfits).find(function(k) {
+    return occasion.indexOf(k) >= 0;
+  }) || 'birthday';
+
+  const outfit = outfits[key];
+  const style  = isShe ? outfit.she : isHe ? outfit.he : outfit.they;
+
+  return style;
+}
+
+// ─────────────────────────────────────────────
+//  CHARACTER REFERENCE PROMPT
+//  Clean flat character DESIGN SHEET — not watercolour.
+//  Wii/Nintendo style: flat colours, bold outlines,
+//  front + side + back view on one sheet.
+//  This is the anchor for all 12 page illustrations.
+// ─────────────────────────────────────────────
+// buildCharacterReferencePrompt defined below
+
+// ─────────────────────────────────────────────
+//  SHOT TYPE by page — forces composition variety
+//  Hard-coded rotation so no two consecutive pages
+//  have the same framing.
+// ─────────────────────────────────────────────
+function getShotType(pageNum) {
+  const shots = {
+    1:  { type: 'WIDE ESTABLISHING SHOT',   desc: 'child small in environment, full scene visible, lots of background detail, character takes up no more than 1/3 of frame' },
+    2:  { type: 'WIDE INTERIOR SHOT',       desc: 'full room visible, child in the scene, warm home environment, character full body' },
+    3:  { type: 'MEDIUM FULL BODY',         desc: 'character visible from head to toe, interacting with an object or moment, clear action' },
+    4:  { type: 'CLOSE-UP REACTION',        desc: 'face and upper body, large expressive eyes, clear emotional reaction — wonder, excitement, surprise' },
+    5:  { type: 'WIDE ACTION SHOT',         desc: 'child in motion across a wide scene, full body, environment sweeping around them, sense of energy' },
+    6:  { type: 'MEDIUM TWO-SHOT',          desc: 'child with comfort object or in quiet moment, medium framing, intimate and still' },
+    7:  { type: 'FULL BODY STANDING',       desc: 'child standing full body, something has gone slightly wrong, expression of mild worry or surprise, full environment visible' },
+    8:  { type: 'MEDIUM SEATED',            desc: 'child sitting or crouching, full body, thoughtful expression, quiet moment' },
+    9:  { type: 'WIDE JOYFUL ACTION',       desc: 'wide shot, child moving with joy, arms out or jumping, full body, environment alive around them' },
+    10: { type: 'CLOSE EMOTIONAL TWO-SHOT', desc: 'child and ONE adult close together, faces and upper body, warm embrace or gentle touch, highly emotional' },
+    11: { type: 'MEDIUM GROUP SHOT',        desc: 'child with family, medium framing, warm and resolved, everyone visible from waist up' },
+    12: { type: 'INTIMATE CLOSE-UP',        desc: 'child alone, close face shot, peaceful and tender expression, quiet end-of-day feeling' },
+  };
+  return shots[pageNum] || shots[3];
+}
+
+// ─────────────────────────────────────────────
+//  SECONDARY CHARACTER LOCK
+//  Adults described consistently. Appear ONE page only.
+//  Pre-assigned by role so they never appear twice.
+// ─────────────────────────────────────────────
+function getSecondaryCharPages(o) {
+  // Returns {pageNum, description} for each secondary character
+  // Each appears on ONE page only — no exceptions
+  const assigned = {};
+
+  // Gift giver appears on page 10 (emotional peak) or 11 (resolution)
+  if (o.giftFrom && o.giftAppear === 'Yes — one moment in the story') {
+    const isParent = o.giftRelation && (
+      o.giftRelation.toLowerCase().includes('parent') ||
+      o.giftRelation.toLowerCase().includes('mum') ||
+      o.giftRelation.toLowerCase().includes('dad')
+    );
+    assigned[10] = o.giftFrom + ': warm adult with similar hair colour and features to the child, loving expression, ' +
+      (isParent ? 'parent-age adult in comfortable home clothes' : 'adult in warm casual clothes') +
+      ' — this character appears on THIS PAGE ONLY. They do not appear on any other page.';
+  }
+
+  // Extra characters on page 11 only
+  if (o.extraChars) {
+    assigned[11] = 'Also present: ' + o.extraChars + ' — appearing on THIS PAGE ONLY. Do not appear on any other page.';
+  }
+
+  // Pet on page 6 only if present
+  if (o.pet && !assigned[6]) {
+    assigned[6] = o.pet + ' — the family pet, appears in this scene only. Do not appear on any other page.';
+  }
+
+  return assigned;
+}
+
+// ─────────────────────────────────────────────
+//  PAGE ILLUSTRATION PROMPT — full visual lock
+//  Every element specified. Every page different shot.
+//  Secondary characters on one page only.
+
+
+
+// ─────────────────────────────────────────────
+//  SETTING SEED
+//  Locked world/atmosphere description.
+//  Derived from: occasion + tone + setting field.
+//  Kept consistent across all 12 pages.
+//  Subtle palette shifts applied at arc turning
+//  points only (not forced on every page).
+// ─────────────────────────────────────────────
+function buildSettingSeed(o) {
+  const tone     = o.tone     || '';
+  const occasion = o.occasion || '';
+
+  // ── Base environment ──
+  // If user selected a setting, use it as the anchor.
+  // Otherwise derive from occasion — always real world, always joyful.
+  const envByOccasion = {
+    'Birthday':            'warm family home — kitchen, living room, backyard with balloons and bunting. NO Christmas tree. NO Christmas decorations.',
+    'First Day of School': 'quiet Australian suburban street and school gate, morning light, footpath. NO Christmas tree. NO Christmas decorations.',
+    'Christmas':           'warm Australian family home. Christmas tree with lights and baubles. Presents under the tree. Morning light through windows.',
+    'New Sibling':         'warm sunlit family home — soft bedroom and living room, gentle light. NO Christmas tree. NO Christmas decorations.',
+    'Moving House':        'cardboard boxes, familiar streets from a car window, a new front door. NO Christmas tree. NO Christmas decorations.',
+    'Lost a Tooth':        'cosy bedroom at night — soft lamp light, moonlight at the window, cosy bed. NO Christmas tree. NO Christmas decorations.',
+    'Easter':              'Australian backyard garden — dewy grass, golden morning light, autumn leaves on ground, colourful Easter eggs hidden in the garden. NO Christmas tree. NO Christmas decorations. NO star on top of anything.',
+    'Just Because':        'sunny Australian park or warm café. Golden afternoon, outdoor setting. NO Christmas tree. NO Christmas decorations.',
+    'Graduation':          'sunny park or family garden, open blue sky, warm afternoon. NO Christmas tree. NO Christmas decorations.',
+    'New Baby':            'warm soft bedroom and living room — cream and pastel tones, gentle morning light. NO Christmas tree. NO Christmas decorations.',
+    'New Home':            'new house with bare rooms, cardboard boxes, a new garden. Late afternoon. NO Christmas tree. NO Christmas decorations.',
+    'Retirement':          'beloved garden or home interior, golden afternoon light. NO Christmas tree. NO Christmas decorations.',
+  };
+
+  const occasionKey = Object.keys(envByOccasion).find(function(k){
+    return occasion.toLowerCase().indexOf(k.toLowerCase()) >= 0;
+  });
+  const baseEnv = o.setting
+    ? o.setting.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\s]*/u, '').trim()
+    : (envByOccasion[occasionKey] || 'warm Australian family home and garden, everyday joyful environment');
+
+  // ── Colour palette by tone ──
+  const paletteByTone = {
+    'Warm & Heartfelt':  'warm amber and cream colour palette, soft golden light, honey tones',
+    'Funny & Silly':     'bright saturated colours, playful warm palette, cheerful clear light',
+    'Big Adventure':     'vivid warm palette, strong clear light, rich outdoor colours',
+    'Funny & Relatable': 'comfortable warm tones, soft neutral palette, gentle diffused light',
+    'Heartfelt':         'muted warm palette, soft golden hour light, intimate and close',
+    'Celebratory':       'bright joyful colours, warm gold and cream, festive warm light',
+    'Inspirational':     'clear warm palette, open light, uplifting colour temperature',
+    'Warm & Nostalgic':  'golden hour palette, amber and honey tones, long warm shadows',
+    'Epic Adventure':    'rich bold palette, dramatic warm light, strong saturated colours',
+    'Funny & Witty':     'warm neutral palette, clear natural light, understated colours',
+  };
+  const palette = paletteByTone[tone] || 'warm amber and cream palette, soft natural Australian light';
+
+  // ── Time of day (set once, held throughout — no drift) ──
+  const timeByOccasion = {
+    'Birthday':            'morning to midday light',
+    'First Day of School': 'early morning golden light, slight dew in the air',
+    'Christmas':           'bright Christmas morning light',
+    'Lost a Tooth':        'soft evening and night light, warm lamp glow',
+    'Easter':              'early morning light, golden and fresh',
+    'Retirement':          'warm golden afternoon light',
+  };
+  const timeOfDay = timeByOccasion[occasionKey] || 'warm natural daylight';
+
+  return baseEnv + '. ' + palette + '. ' + timeOfDay + '. Australian in feel, grounded and real, never fantasy.';
+}
+
+// ─────────────────────────────────────────────
+//  PALETTE SHIFT BY PAGE
+//  Applied selectively — only at genuine story
+//  arc turning points. Does not shift every page.
+//
+//  Arc shape:
+//  Pages 1-2:   Establishing warmth (base palette)
+//  Pages 3-6:   Rising brightness as occasion builds
+//  Page 7:      Slight desaturation — the wobble
+//  Pages 8-9:   Warming back — the turn
+//  Page 10:     Peak luminosity — emotional climax
+//  Pages 11-12: Soft golden warmth — resolution
+// ─────────────────────────────────────────────
+function getPaletteShift(pageNum) {
+  if      (pageNum <= 2)   return '';  // Base palette — no shift needed
+  else if (pageNum <= 4)   return 'slightly brighter and more vivid than establishing pages, building energy';
+  else if (pageNum <= 6)   return 'warmest and most vivid of the book, peak joy, rich saturated colours';
+  else if (pageNum === 7)  return 'slightly cooler and softer — muted tones, gentle desaturation, emotional weight';
+  else if (pageNum <= 9)   return 'warming back up, colours returning, emotional light building again';
+  else if (pageNum === 10) return 'luminous and radiant — the brightest most golden page of the entire book';
+  else if (pageNum === 11) return 'warm resolved palette, comfortable and content, settled golden tones';
+  else                     return 'soft and tender, quieter palette, intimate warm light, like the end of a perfect day';
+}
+
+// ─────────────────────────────────────────────
+//  MOOD BY PAGE — mirrors story arc precisely
+// ─────────────────────────────────────────────
+function getPageMood(pageNum) {
+  if      (pageNum <= 2)   return 'warm, gentle, inviting — the child at home in their world';
+  else if (pageNum <= 4)   return 'anticipatory and bright, full of building feeling';
+  else if (pageNum <= 6)   return 'joyful, alive, fully engaged — the heart of the occasion';
+  else if (pageNum === 7)  return 'slightly uncertain — a small wobble, still warm but unsettled';
+  else if (pageNum <= 9)   return 'tender and emotionally turning — strength finding its way back';
+  else if (pageNum === 10) return 'peak emotional warmth — radiant, full, the biggest feeling of the book';
+  else if (pageNum === 11) return 'warm resolution — content, joyful, complete';
+  else                     return 'quiet and tender — full of love, like the last page of a perfect story';
+}
+
+// ─────────────────────────────────────────────
+//  CHARACTER REFERENCE PROMPT
+//  SDXL — one clean portrait on plain background.
+//  This image anchors all 12 page illustrations.
+// ─────────────────────────────────────────────
+function buildCharacterReferencePrompt(o) {
+  // Clean, concise prompt optimised for Recraft V3 + custom style_id
+  // Style is handled by style_id — prompt describes WHAT not HOW
+  const charSeed   = buildCharacterSeed(o);
+  const outfitSeed = buildOutfitSeed(o);
+  const age        = parseInt(o.age) || 5;
+  const ageNote    = age <= 3 ? 'toddler' : age <= 6 ? 'young child' : age <= 12 ? 'child' : 'young person';
+
+  return ageNote + ' character, full body, ' + charSeed + ', ' + outfitSeed +
+    ', standing facing forward, neutral warm expression, plain cream background, no scene, no props, single character only';
+}
+
+// ─────────────────────────────────────────────
+//  PAGE ILLUSTRATION PROMPT
+//  Combines: style prefix + character seed +
+//  setting seed + scene + mood + palette shift
+//  Every component is locked and intentional.
+// ─────────────────────────────────────────────
+function buildPageIllustrationPrompt(o, page, charSeed, settingSeed, outfitSeed) {
+  const character = charSeed    || buildCharacterSeed(o);
+  const setting   = settingSeed || buildSettingSeed(o);
+  const outfit    = outfitSeed  || buildOutfitSeed(o);
+  const age       = parseInt(o.age) || 5;
+
+  const pageNum = page.num || 1;
+  const mood    = getPageMood(pageNum);
+  const shift   = getPaletteShift(pageNum);
+
+  // Clean scene text — extract the core action happening
+  const scene = page.text
+    .replace(/Page\s*\d+:\s*/i, '')
+    .replace(/[^a-zA-Z0-9\s.,!?''"-]/g, '')
+    .trim()
+    .slice(0, 220);
+
+  // Gift giver hint — resolution pages only
+  let giftHint = '';
+  if (o.giftFrom && o.giftAppear !== 'Dedication page only' && pageNum >= 10) {
+    giftHint = ' Include a warm loving adult (' + o.giftFrom + ') — similar colouring to the child, gentle joyful expression, embracing or close to the child.';
+  }
+
+  // Comfort object — peak emotional pages only
+  let toyHint = '';
+  if (o.toy && (pageNum === 3 || pageNum === 4 || pageNum === 8)) {
+    toyHint = ' The child is holding or near ' + o.toy + '.';
+  }
+
+  // Style prefix — locked
+  const stylePrefix = [
+    "children's picture book illustration, grain texture, warm illustration style",
+    "children's picture book style",
+    "warm pastel tones",
+    "gentle ink outlines",
+    "cosy storybook aesthetic",
+    "award-winning children's book art",
+    "full page composition",
+    "no text or words in the image",
+    "no borders or frames",
+  ].join(', ');
+
+  // AGE LOCK — critical to stop age drift between pages
+  const ageLock = 'The child is EXACTLY ' + age + ' years old — ' +
+    (age <= 3 ? 'a toddler, chubby cheeks, small and round-faced' :
+     age <= 6 ? 'a young child, small and childlike proportions' :
+     age <= 10 ? 'a school-age child, not a teenager' :
+                 'a child aged ' + age) + '. Do NOT draw them older.';
+
+  // COMPOSITION RULE — force full body action scenes
+  const compositionRule = pageNum <= 11
+    ? 'FULL BODY composition — show the complete character from head to toe. ' +
+      'The character must be DOING something from the scene: ' + scene.slice(0, 100) + '. ' +
+      'NOT a portrait or close-up. Show action, movement, environment around them.'
+    : 'Intimate close composition — character and adult together, warm embrace, faces visible.';
+
+  const avoidance = 'avoid: portrait-only crops, face close-ups with no body, photo-realism, dark colours, scary elements, text in image, watermarks, age drift';
+
+  // OUTFIT LOCK — must appear verbatim in every prompt
+  const outfitLock = outfit + '. The outfit MUST be identical to the character reference sheet. Same colours, same style, same accessories, same shoes. Do not change any clothing detail between pages.';
+
+  const parts = [
+    stylePrefix,
+    ageLock,
+    outfitLock,
+    compositionRule,
+    'Character face and hair: ' + character,
+    'Setting and world: ' + setting,
+    'Mood: ' + mood,
+    shift ? 'Colour temperature: ' + shift : '',
+    giftHint,
+    toyHint,
+    avoidance,
+  ].filter(Boolean);
+
+  return parts.join('. ');
+}
+
+
 
 // ─────────────────────────────────────────────
 //  PARSE STORY INTO PAGES
@@ -737,95 +1369,240 @@ Write the story now:`;
 function parsePages(text) {
   const pages = [];
   const matches = [...text.matchAll(/Page\s+(\d+):\s*([\s\S]*?)(?=Page\s+\d+:|$)/gi)];
-  for (const m of matches) {
-    pages.push({ num: parseInt(m[1]), text: m[2].trim() });
-  }
-  if (pages.length === 0) {
-    // fallback: split by double newline
-    text.split(/\n{2,}/).forEach((t, i) => { if(t.trim()) pages.push({ num: i+1, text: t.trim() }); });
-  }
+  for (const m of matches) pages.push({ num: parseInt(m[1]), text: m[2].trim() });
+  if (pages.length === 0)
+    text.split(/\n{2,}/).forEach((t, i) => { if (t.trim()) pages.push({ num: i+1, text: t.trim() }); });
   return pages;
 }
 
 // ─────────────────────────────────────────────
-//  BUILD ILLUSTRATION PROMPT
-// ─────────────────────────────────────────────
-function buildIllustrationPrompt(o, page) {
-  // Stable Diffusion benefits from style keywords at the start and a locked character seed description
-  const stylePrefix = 'soft watercolour illustration, children\'s picture book style, warm pastel tones, gentle ink outlines, cosy storybook aesthetic, award-winning children\'s book art';
-  // Build rich character description from new fields
-  const hairDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair', o.hairStyle ? `worn ${o.hairStyle}` : ''].filter(Boolean).join(' ');
-  const extraFeats = o.features ? `, ${o.features}` : '';
-  const charDesc = `a ${o.age}-year-old child with ${o.skin}, ${o.eyes}, ${hairDesc}${extraFeats}, wearing bright cheerful storybook clothing`;
-  const scene = page.text.slice(0, 150).replace(/"/g, '\'');
-  return `${stylePrefix}. Scene: ${scene}. Main character: ${charDesc}. Setting: ${o.setting}. Mood: warm, magical, joyful. Highly detailed, full colour, professional illustration.`;
-}
-
-// ─────────────────────────────────────────────
-//  CLAUDE API — generate story
+//  CLAUDE API — Story generation
 // ─────────────────────────────────────────────
 async function generateStory(prompt, apiKey) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
-  });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Claude API error'); }
-  const data = await res.json();
+  const modelEl  = document.getElementById('param-model');
+  const toksEl   = document.getElementById('param-tokens');
+  const modelVal = (modelEl && modelEl.value) ? modelEl.value : 'claude-sonnet-4-5';
+  const maxToks  = (toksEl  && toksEl.value)  ? parseInt(toksEl.value) : 3000;
+
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: modelVal,
+        max_tokens: maxToks,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+  } catch (fetchErr) {
+    throw new Error('Network error — could not reach Anthropic API. Check your internet connection. (' + fetchErr.message + ')');
+  }
+
+  if (!res.ok) {
+    let errMsg = 'Claude API error (HTTP ' + res.status + ')';
+    try {
+      const e = await res.json();
+      errMsg = (e.error && e.error.message) ? e.error.message : JSON.stringify(e);
+    } catch(_) {}
+    throw new Error(errMsg);
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch(parseErr) {
+    throw new Error('Could not parse Claude API response: ' + parseErr.message);
+  }
+
+  if (!data.content || !data.content[0] || !data.content[0].text) {
+    throw new Error('Unexpected Claude API response shape: ' + JSON.stringify(data).slice(0, 200));
+  }
+
   return data.content[0].text;
 }
 
 // ─────────────────────────────────────────────
-//  REPLICATE API — Stable Diffusion illustration
-//  Model: stability-ai/stable-diffusion (SDXL)
-//  ~$0.003 per image — 15-20x cheaper than DALL-E
+//  FAL.AI — direct browser API runner
+//  Supports CORS — works directly from browser
+//  No backend needed. REST: POST fal.run/{model}
 // ─────────────────────────────────────────────
-async function generateImage(prompt, apiKey) {
-  // Step 1: Start the prediction
-  const res = await fetch('https://api.replicate.com/v1/models/stability-ai/stable-diffusion/predictions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'Prefer': 'wait=30'  // wait up to 30s for result in one request
-    },
-    body: JSON.stringify({
-      input: {
-        prompt: prompt,
-        negative_prompt: 'text, words, letters, watermark, signature, blurry, ugly, deformed, extra limbs, bad anatomy, adult content, photo, realistic',
-        width: 1024,
-        height: 1024,
-        num_inference_steps: 30,
-        guidance_scale: 7.5,
-        scheduler: 'DPMSolverMultistep'
-      }
-    })
-  });
+async function falRun(modelId, input, apiKey) {
+  let res;
+  try {
+    res = await fetch('https://fal.run/' + modelId, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Key ' + apiKey,
+      },
+      body: JSON.stringify(input),
+    });
+  } catch (fetchErr) {
+    throw new Error('Network error reaching fal.ai: ' + fetchErr.message);
+  }
 
   if (!res.ok) {
-    const e = await res.json();
-    throw new Error(e.detail || 'Replicate API error');
+    let errMsg = 'fal.ai error (HTTP ' + res.status + ')';
+    try { const e = await res.json(); errMsg = e.detail || e.message || JSON.stringify(e).slice(0, 200); } catch(_) {}
+    throw new Error(errMsg);
   }
 
-  let prediction = await res.json();
+  let data;
+  try { data = await res.json(); } catch(e) { throw new Error('Could not parse fal.ai response'); }
 
-  // Step 2: If not completed yet, poll until done
-  const maxPolls = 30;
-  let polls = 0;
-  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && polls < maxPolls) {
-    await new Promise(r => setTimeout(r, 2000));
-    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
+  // fal.ai images returned in data.images[].url
+  // Handle various fal.ai response shapes
+  if (data.images && data.images[0] && data.images[0].url) return data.images[0].url;
+  if (data.image  && data.image.url)  return data.image.url;
+  if (Array.isArray(data) && data[0] && data[0].url) return data[0].url;
+  if (data.data && data.data.images && data.data.images[0]) return data.data.images[0].url;
+  throw new Error('No image URL in fal.ai response: ' + JSON.stringify(data).slice(0, 300));
+}
+
+// ─────────────────────────────────────────────
+//  FAL.AI — queue-based runner
+//  Uses URLs returned by fal.ai in submit response
+//  so we never construct status/result URLs manually
+// ─────────────────────────────────────────────
+async function falRunQueue(modelId, input, apiKey) {
+  const authHeader  = { 'Authorization': 'Key ' + apiKey };
+  const jsonHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Key ' + apiKey };
+
+  // Step 1: Submit to queue — fal returns status_url and response_url
+  let queued;
+  try {
+    const res = await fetch('https://queue.fal.run/' + modelId, {
+      method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
     });
-    prediction = await pollRes.json();
+    if (!res.ok) {
+      let msg = 'fal.ai submit error (HTTP ' + res.status + ')';
+      try { const e = await res.json(); msg = e.detail || e.message || JSON.stringify(e).slice(0,300); } catch(_){}
+      throw new Error(msg);
+    }
+    queued = await res.json();
+  } catch (e) {
+    throw new Error(e.message || 'fal.ai submit failed');
+  }
+
+  // fal returns status_url and response_url — use them directly
+  const statusUrl   = queued.status_url;
+  const responseUrl = queued.response_url;
+  if (!statusUrl || !responseUrl) {
+    throw new Error('fal.ai did not return status_url/response_url. Got: ' + JSON.stringify(queued).slice(0,300));
+  }
+
+  // Step 2: Poll status URL (exact URL from fal, no construction)
+  let polls = 0;
+  const maxPolls = 60; // 3 min max
+  while (polls < maxPolls) {
+    await new Promise(r => setTimeout(r, 3000));
+    let statusData;
+    try {
+      const statusRes = await fetch(statusUrl, { method: 'GET', headers: authHeader });
+      if (!statusRes.ok) { polls++; continue; }
+      statusData = await statusRes.json();
+    } catch(_) { polls++; continue; }
+
+    if (statusData.status === 'COMPLETED') break;
+    if (statusData.status === 'FAILED') {
+      throw new Error('fal.ai failed: ' + (statusData.error || JSON.stringify(statusData).slice(0,200)));
+    }
     polls++;
   }
+  if (polls >= maxPolls) throw new Error('fal.ai timed out after 3 minutes');
 
-  if (prediction.status === 'failed') throw new Error('Replicate image generation failed: ' + (prediction.error || 'unknown error'));
-  if (!prediction.output || !prediction.output[0]) throw new Error('No image output from Replicate');
+  // Step 3: Fetch result from response_url (exact URL from fal)
+  let data;
+  try {
+    const resultRes = await fetch(responseUrl, { method: 'GET', headers: authHeader });
+    if (!resultRes.ok) {
+      const t = await resultRes.text();
+      throw new Error('Result fetch failed (' + resultRes.status + '): ' + t.slice(0,200));
+    }
+    data = await resultRes.json();
+  } catch(e) {
+    throw new Error('Could not fetch fal.ai result: ' + e.message);
+  }
 
-  return prediction.output[0]; // URL to generated image
+  if (data.images && data.images[0] && data.images[0].url) return data.images[0].url;
+  if (data.image  && data.image.url)  return data.image.url;
+  throw new Error('No image URL in fal.ai result: ' + JSON.stringify(data).slice(0,300));
 }
+
+// ─────────────────────────────────────────────
+//  STAGE 2A — Generate character seed image
+//  Model: fal-ai/fast-sdxl
+//  One clean portrait on plain background.
+//  This image anchors all 12 page illustrations.
+// ─────────────────────────────────────────────
+async function generateCharacterSeed(o, apiKey) {
+  const prompt = buildCharacterReferencePrompt(o);
+  // Recraft V3 with locked Storyborn style — grain substrate + custom style ID
+  // style_id only works with image-to-image, not text-to-image
+  return falRunQueue('fal-ai/recraft/v3/text-to-image', {
+    prompt:     prompt.slice(0, 950),
+    style:      'digital_illustration/grain',
+    image_size: { width: 1024, height: 1024 },
+  }, apiKey);
+}
+
+// ─────────────────────────────────────────────
+//  STAGE 2B — Page illustration
+//  Model: FLUX.1 Kontext [pro] on fal.ai
+//  Takes previous page image as reference and
+//  edits it into the new scene — character,
+//  outfit, and all features persist automatically
+//  because they are CARRIED from the input image.
+//  $0.04 per image. Best character consistency available.
+// ─────────────────────────────────────────────
+async function generatePageIllustration(o, page, referenceImageUrl, charSeedText, settingSeedText, outfitSeedText, apiKey) {
+  const shot      = getShotType(page.num || 1);
+  const mood      = getPageMood(page.num || 1);
+  const secondary = getSecondaryCharPages(o);
+  const age       = parseInt(o.age) || 5;
+
+  const scene = page.text
+    .replace(/Page\s*\d+:\s*/i, '')
+    .replace(/[^a-zA-Z0-9\s.,!?\-]/g, '')
+    .trim().slice(0, 150);
+
+  const setting = settingSeedText
+    ? settingSeedText.split('.')[0].slice(0, 100)
+    : 'warm Australian home, joyful everyday setting';
+
+  const secChar = secondary[page.num]
+    ? secondary[page.num].slice(0, 60)
+    : '';
+
+  // Keep well under 1000 char Recraft limit
+  const prompt = [
+    (shot.prompt || shot.desc || shot.type).slice(0, 100),
+    'Scene: ' + scene,
+    'Setting: ' + setting,
+    mood,
+    age + ' year old child, do not age them up',
+    secChar,
+  ].filter(Boolean).join('. ').slice(0, 950);
+
+  return falRunQueue('fal-ai/recraft/v3/image-to-image', {
+    prompt:     prompt,
+    image_url:  referenceImageUrl,
+    style:      'digital_illustration/grain',
+    style_id:   'eb06ab37-0114-423e-93e1-c961ef5d7781',
+    strength:   0.75,
+    image_size: { width: 1024, height: 1024 },
+  }, apiKey);
+}
+
+
+
+
 
 // ─────────────────────────────────────────────
 //  RENDER STORY PREVIEW
@@ -846,17 +1623,24 @@ function renderStoryPreview(pages) {
 function renderProofSkeletons(pages) {
   const grid = v$('proofGrid');
   grid.style.display = 'grid';
-  grid.innerHTML = pages.map(p => `
+  grid.innerHTML = pages.map(p => {
+    const shot = getShotType(p.num);
+    return `
     <div class="proof-page" id="proof-${p.num}">
       <div class="proof-img">
-        <div class="img-placeholder"><div class="emoji">🎨</div>Illustrating page ${p.num}…</div>
+        <div class="img-placeholder">
+          <div class="emoji">🎨</div>
+          <div style="font-size:0.65rem;font-weight:700;color:var(--primary);margin-bottom:0.2rem">${shot.type}</div>
+          <div style="font-size:0.62rem;color:var(--muted);line-height:1.4;padding:0 0.5rem">${(shot.prompt||shot.desc||'').slice(0,80)}…</div>
+        </div>
         <div class="img-loading" id="imgload-${p.num}"><span class="spinner"></span><span>Generating…</span></div>
       </div>
       <div class="proof-text-area">
-        <div class="proof-pg">Page ${p.num}</div>
+        <div class="proof-pg">Page ${p.num} — ${shot.type}</div>
         <div class="proof-txt">${p.text}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function setPageImage(num, url) {
@@ -872,105 +1656,206 @@ function setPageImageError(num) {
 }
 
 // ─────────────────────────────────────────────
-//  MAIN PIPELINE
+//  MAIN PIPELINE — v4 Two-Stage Illustration
+//  Stage 0: Validate order
+//  Stage 1: Generate story (Claude)
+//  Stage 2A: Generate character seed image (SDXL)
+//  Stage 2B: Generate 12 page illustrations (consistent-character)
+//  Stage 3: Assemble proof
+//  Stage 4: Ready for review
 // ─────────────────────────────────────────────
 async function runPipeline() {
-  const claudeKey = v$('claudeKey').value.trim();
+  const claudeKey    = v$('claudeKey').value.trim();
   const replicateKey = v$('replicateKey').value.trim();
-
   const order = gatherOrder();
 
   // Validation
-  if (!order.name) { alert('Please enter the child\'s name.'); return; }
-  if (!order.age)  { alert('Please enter the child\'s age.'); return; }
-  if (!order.occasion) { alert('Please select an occasion.'); return; }
-  if (!order.tone) { alert('Please select a story tone.'); return; }
-  if (!claudeKey)  { alert('Please enter your Anthropic API key at the top.'); return; }
+  if (!order.name)     { alert("Please enter the child's name.");       return; }
+  if (!order.age)      { alert("Please enter the child's age.");        return; }
+  if (!order.occasion) { alert("Please select an occasion.");           return; }
+  if (!order.tone)     { alert("Please select a story tone.");          return; }
+  if (!claudeKey)      { alert("Please enter your Anthropic API key."); return; }
 
   v$('submitBtn').disabled = true;
-  v$('idleState').style.display = 'none';
-  v$('storyPreview').style.display = 'none';
-  v$('proofGrid').style.display = 'none';
-  v$('actionRow').style.display = 'none';
+  v$('idleState').style.display     = 'none';
+  v$('storyPreview').style.display  = 'none';
+  v$('proofGrid').style.display     = 'none';
+  v$('actionRow').style.display     = 'none';
   v$('approvedBanner').style.display = 'none';
 
-  // Reset stages
-  for (let i = 0; i <= 4; i++) setStage(i, '', i === 0 ? 'Processing…' : ['Building story prompt…','Queuing illustrations…','Preparing layout…','Awaiting approval…'][i-1] || '');
+  // Reset all stages
+  const stageLabels = [
+    'Waiting for order…',
+    'Claude will write your personalised story',
+    'Generating character seed image…',
+    'Illustrating 12 pages with consistent-character…',
+    'Assembling proof layout',
+    'Awaiting your approval',
+  ];
+  for (let i = 0; i <= 5; i++) setStage(i, '', stageLabels[i] || '');
+
+  // Add stage 2A/2B sub-stages if not already in DOM
+  ensureExtraStages();
 
   try {
     // ── STAGE 0: Order received ──
     setStage(0, 'active', 'Reading order details…');
-    await delay(600);
+    await delay(400);
     setStage(0, 'done', `Order for ${order.name}, age ${order.age} — ${order.occasion}`);
 
-    // ── STAGE 1: Write story ──
-    setStage(1, 'active', 'Claude is writing your story…');
-    const prompt = buildStoryPrompt(order);
-    const storyText = await generateStory(prompt, claudeKey);
-    const pages = parsePages(storyText);
-    setStage(1, 'done', `Story complete — ${pages.length} pages written`);
+    // ── STAGE 1: Story generation ──
+    setStage(1, 'active', 'Claude is writing the story…');
+    const storyPrompt = buildStoryPrompt(order);
+    const storyText   = await generateStory(storyPrompt, claudeKey);
+    const pages       = parsePages(storyText);
+    setStage(1, 'done', `Story complete — ${pages.length} pages, ${storyText.split(/\s+/).length} words`);
     renderStoryPreview(pages);
 
-    // ── STAGE 2: Illustrations ──
-    setStage(2, 'active', `Generating ${pages.length} illustrations with Stable Diffusion…`);
-    renderProofSkeletons(pages);
+    // ── Pre-build ALL THREE seeds once — embedded in every page illustration ──
+    const charSeedText    = buildCharacterSeed(order);
+    const settingSeedText = buildSettingSeed(order);
+    const outfitSeedText  = buildOutfitSeed(order);
 
+    // ── STAGE 2: Character seed image ──
+    let characterSeedUrl = null;
     if (replicateKey) {
-      // Generate illustrations concurrently (batched to avoid rate limits)
+      setStage(2, 'active', 'Generating character seed image (SDXL)…');
+
+      // Show text seeds in pipeline panel immediately
+      const seedInfoEl = v$('characterSeedInfo');
+      if (seedInfoEl) {
+        const featureLocks = buildFeatureLock(order);
+        seedInfoEl.innerHTML =
+          '<div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.25rem"><strong style="color:var(--ink)">Character:</strong> ' + charSeedText + '</div>' +
+          '<div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.25rem"><strong style="color:var(--ink)">Outfit:</strong> ' + outfitSeedText + '</div>' +
+          (featureLocks.length ? '<div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.25rem"><strong style="color:var(--ink)">Locked features:</strong> ' + featureLocks.join(' · ') + '</div>' : '') +
+          '<div style="font-size:0.7rem;color:var(--muted)"><strong style="color:var(--ink)">Setting:</strong> ' + settingSeedText.slice(0, 120) + '…</div>';
+        seedInfoEl.style.display = 'block';
+        v$('characterSeedWrap').style.display = 'block';
+      }
+
+      try {
+        characterSeedUrl = await generateCharacterSeed(order, replicateKey);
+        const seedEl = v$('characterSeedImg');
+        if (seedEl && characterSeedUrl) {
+          seedEl.src           = characterSeedUrl;
+          seedEl.style.display = 'block';
+        }
+        setStage(2, 'done', 'Character seed locked — same child on all 12 pages');
+      } catch (seedErr) {
+        setStage(2, 'error', 'Seed image failed: ' + seedErr.message + ' — continuing with text description only');
+        console.warn('Character seed image failed:', seedErr);
+      }
+
+      // ── STAGE 3: Page illustrations ──
+      setStage(3, 'active', 'Recraft V3 — illustrating 12 pages…');
+      renderProofSkeletons(pages);
+
       let done = 0;
-      const batchSize = 3;
+      const batchSize = 2;
       for (let i = 0; i < pages.length; i += batchSize) {
         const batch = pages.slice(i, i + batchSize);
-        await Promise.all(batch.map(async (page) => {
+        await Promise.all(batch.map(async function(page) {
           try {
-            const imgPrompt = buildIllustrationPrompt(order, page);
-            const url = await generateImage(imgPrompt, replicateKey);
+            let url;
+            if (characterSeedUrl) {
+              // Full pipeline: seed image + both text seeds
+              // FLUX Kontext: pass seed image as reference — character is edited into new scene
+              url = await generatePageIllustration(order, page, characterSeedUrl, charSeedText, settingSeedText, outfitSeedText, replicateKey);
+            } else {
+              // Fallback: text-only if seed image failed
+              // Build short fallback prompt for Recraft (max 950 chars)
+              const shot = getShotType(page.num || 1);
+              const scene = page.text.replace(/Page\s*\d+:\s*/i,'').replace(/[^a-zA-Z0-9\s.,!?\-]/g,'').trim().slice(0,150);
+              const fallbackPrompt = (shot.type + ': ' + scene + '. ' + (settingSeedText||'').split('.')[0].slice(0,100) + '. ' + getPageMood(page.num||1)).slice(0, 950);
+              const negPrompt = document.getElementById('negPromptEditor') && document.getElementById('negPromptEditor').value
+                || 'text, watermark, blurry, ugly, deformed, extra limbs, bad anatomy, photo, realistic, dark, scary';
+              const steps    = parseInt((document.getElementById('param-steps') || {}).value || 30);
+              const guidance = parseFloat((document.getElementById('param-guidance') || {}).value || 7.5);
+              url = await falRunQueue('fal-ai/recraft/v3/text-to-image', {
+                prompt:   fallbackPrompt.slice(0, 950),
+                style:    'digital_illustration/grain',
+                style_id: 'eb06ab37-0114-423e-93e1-c961ef5d7781',
+                image_size: { width: 1024, height: 1024 },
+              }, replicateKey);
+            }
             setPageImage(page.num, url);
-          } catch(e) {
-            console.warn(`Image failed for page ${page.num}:`, e.message);
+          } catch (pageErr) {
+            console.warn('Page ' + page.num + ' illustration failed:', pageErr.message);
             setPageImageError(page.num);
           } finally {
             done++;
-            setStage(2, 'active', `Illustrating… (${done}/${pages.length} pages)`);
+            setStage(3, 'active', 'Illustrating… (' + done + '/' + pages.length + ' pages done)');
           }
         }));
-        if (i + batchSize < pages.length) await delay(1000); // rate limit buffer
+        if (i + batchSize < pages.length) await delay(1500);
       }
-      setStage(2, 'done', `${pages.length} illustrations generated`);
+      setStage(3, 'done', pages.length + ' illustrations complete');
     } else {
-      // No OpenAI key — show placeholder state
-      await delay(800);
-      pages.forEach(p => {
-        const loader = v$(`imgload-${p.num}`);
-        if (loader) loader.innerHTML = '<span style="font-size:0.7rem;color:var(--muted)">Add Replicate key at replicate.com for illustrations</span>';
-      });
-      setStage(2, 'done', 'Skipped — no OpenAI key provided');
+      // No Replicate key — skip illustrations
+      setStage(2, 'done', 'Skipped — add fal.ai key for illustrations');
+      setStage(3, 'done', 'Skipped — add fal.ai key for illustrations');
+      renderProofSkeletons(pages);
     }
 
-    // ── STAGE 3: Assemble ──
-    setStage(3, 'active', 'Assembling your proof layout…');
-    await delay(800);
-    setStage(3, 'done', 'Proof assembled — ready for review');
+    // ── STAGE 4: Assemble ──
+    setStage(4, 'active', 'Assembling proof layout…');
+    await delay(600);
+    setStage(4, 'done', 'Proof assembled — ready for review');
 
-    // ── STAGE 4: Ready ──
-    setStage(4, 'active', 'Awaiting your approval…');
-    await delay(400);
-    setStage(4, 'done', `Proof ready for ${order.email || 'review'}`);
+    // ── STAGE 5: Ready ──
+    setStage(5, 'active', 'Awaiting your approval…');
+    await delay(300);
+    setStage(5, 'done', 'Proof ready for ' + (order.email || 'review'));
 
-    // Show actions
     v$('actionRow').style.display = 'flex';
 
-  } catch(err) {
-    const stage = [...document.querySelectorAll('.stage.active')][0];
-    if (stage) {
-      const idx = stage.id.replace('s','');
-      setStage(idx, 'error', '⚠ ' + err.message);
+  } catch (err) {
+    const errText = (err && err.message) ? err.message : String(err);
+    console.error('Pipeline error:', err);
+    // Find the active stage and mark as error
+    const activeStages = [...document.querySelectorAll('.stage.active')];
+    if (activeStages.length > 0) {
+      const idx = activeStages[0].id.replace('s','');
+      setStage(idx, 'error', errText);
+    } else {
+      // No active stage found — mark stage 1 as error as fallback
+      setStage(1, 'error', errText);
     }
-    console.error(err);
+    // Also show a full alert so nothing is hidden
+    console.error('Full error details:', errText);
   } finally {
     v$('submitBtn').disabled = false;
   }
 }
+
+function ensureExtraStages() {
+  // Add stages 2A (seed) and 3 (illustrations) if pipeline only has 5 stages
+  const wrap = v$('stagesWrap');
+  if (!wrap || wrap.querySelectorAll('.stage').length >= 6) return;
+  // Stage 2 exists — add 2A and 3 after it, renumber
+  const s2 = v$('s2');
+  if (!s2) return;
+
+  // Insert seed stage between s2 and s3
+  const seedStage = document.createElement('div');
+  seedStage.className = 'stage'; seedStage.id = 's2a';
+  seedStage.innerHTML = '<div class="stage-icon">🧬</div><div class="stage-body"><div class="stage-name">Character seed</div><div class="stage-status" id="s2a-status">SDXL generates one reference portrait</div></div><div class="stage-check" id="s2a-check"></div>';
+  s2.after(seedStage);
+
+  // Add character seed preview area in pipeline panel
+  const pipelinePanel = v$('pipelinePanel');
+  if (pipelinePanel && !v$('characterSeedWrap')) {
+    const seedWrap = document.createElement('div');
+    seedWrap.id = 'characterSeedWrap';
+    seedWrap.style.cssText = 'display:none;margin-bottom:1rem;background:var(--soft);border:1.5px solid var(--border);border-radius:10px;overflow:hidden';
+    seedWrap.innerHTML = '<div style="padding:0.5rem 0.8rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Character Seed — used for all 12 pages</div><img id="characterSeedImg" src="" alt="Character seed" style="display:none;width:100%;max-height:200px;object-fit:contain;background:white">';
+    const stagesWrap = v$('stagesWrap');
+    stagesWrap.after(seedWrap);
+  }
+}
+
+
 
 function approveProof() {
   v$('approvedBanner').style.display = 'flex';
@@ -990,9 +1875,20 @@ function resetPipeline() {
   v$('actionRow').style.display = 'none';
   v$('approvedBanner').style.display = 'none';
   v$('idleState').style.display = 'block';
-  for (let i = 0; i <= 4; i++) {
-    setStage(i, '', ['Waiting for order…','Claude will write your personalised story','Stable Diffusion (Replicate) will illustrate each page','Layout will be prepared for review','Awaiting your approval'][i]);
-    v$(`s${i}-check`).innerHTML = '';
+  const seedWrap = v$('characterSeedWrap');
+  if (seedWrap) seedWrap.style.display = 'none';
+  const labels = [
+    'Waiting for order…',
+    'Claude will write your personalised story',
+    'SDXL generates one reference portrait to lock appearance',
+    'Recraft V3 illustrates 12 pages with locked Storyborn style',
+    'Layout prepared for review',
+    'Awaiting your approval',
+  ];
+  for (let i = 0; i <= 5; i++) {
+    setStage(i, '', labels[i] || '');
+    const ck = v$('s'+i+'-check');
+    if (ck) ck.innerHTML = '';
   }
 }
 
@@ -1070,6 +1966,43 @@ function renderTones(group) {
 }
 
 // Initialise with kids defaults on load
+// ── API Key persistence ──
+function loadSavedKeys() {
+  const remember = localStorage.getItem('sb_remember') === 'true';
+  const el = document.getElementById('rememberKeys');
+  if (el) el.checked = remember;
+  if (!remember) return;
+  const c = localStorage.getItem('sb_claude_key');
+  const f = localStorage.getItem('sb_fal_key');
+  if (c) document.getElementById('claudeKey').value = c;
+  if (f) document.getElementById('replicateKey').value = f;
+  if (c || f) showKeyMsg('✓ Keys loaded');
+}
+function toggleRememberKeys() {
+  const on = document.getElementById('rememberKeys').checked;
+  localStorage.setItem('sb_remember', on);
+  if (on) { saveKeys(); } else {
+    localStorage.removeItem('sb_claude_key');
+    localStorage.removeItem('sb_fal_key');
+    showKeyMsg('✓ Cleared');
+  }
+}
+function saveKeys() {
+  localStorage.setItem('sb_claude_key', document.getElementById('claudeKey').value);
+  localStorage.setItem('sb_fal_key', document.getElementById('replicateKey').value);
+  showKeyMsg('✓ Saved');
+}
+function maybeSaveKeys() {
+  const el = document.getElementById('rememberKeys');
+  if (el && el.checked) saveKeys();
+}
+function showKeyMsg(msg) {
+  const el = document.getElementById('keySavedMsg');
+  if (!el) return;
+  el.textContent = msg; el.style.display = 'inline';
+  setTimeout(() => el.style.display = 'none', 2000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderOccasions('kids');
   renderTones('kids');
@@ -1150,15 +2083,15 @@ document.addEventListener('DOMContentLoaded', () => {
       <div>
         <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Claude Model</label>
         <select id="param-model" style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none;appearance:none">
-          <option value="claude-sonnet-4-20250514" selected>Sonnet 4 — recommended</option>
-          <option value="claude-opus-4-6">Opus 4 — best quality</option>
-          <option value="claude-haiku-4-5-20251001">Haiku 4 — fastest/cheapest</option>
+          <option value="claude-sonnet-4-5" selected>Sonnet 4 — recommended</option>
+          <option value="claude-opus-4-5">Opus 4 — best quality</option>
+          <option value="claude-haiku-4-5">Haiku 4 — fastest/cheapest</option>
         </select>
         <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Sonnet balances quality + cost best.</div>
       </div>
       <div>
         <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem">Max Tokens</label>
-        <input id="param-tokens" type="number" value="2000" min="500" max="8000" step="100"
+        <input id="param-tokens" type="number" value="3000" min="500" max="8000" step="100"
           style="width:100%;background:var(--soft);border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--ink);outline:none">
         <div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem">Max story length. 2000 covers 10 pages comfortably.</div>
       </div>
@@ -1210,7 +2143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div style="position:relative">
       <pre id="code-claude" style="background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.76rem;line-height:1.7;padding:1.4rem 1.4rem 1.4rem 1.4rem;border-radius:12px;border:1.5px solid #3a2010;overflow-x:auto;white-space:pre;margin:0">// Claude API — Story Generation
 async function generateStory(prompt, apiKey) {
-  const model   = document.getElementById('param-model')?.value  || 'claude-sonnet-4-20250514';
+  const model   = document.getElementById('param-model')?.value  || 'claude-sonnet-4-5';
   const maxToks = document.getElementById('param-tokens')?.value || 2000;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1243,51 +2176,7 @@ async function generateStory(prompt, apiKey) {
     <div style="font-family:'Courier New',monospace;font-size:0.68rem;letter-spacing:0.12em;color:var(--muted);font-weight:600;margin-bottom:0.6rem">2. REPLICATE API — STABLE DIFFUSION ILLUSTRATIONS</div>
     <div style="position:relative">
       <pre id="code-replicate" style="background:#1a1208;color:#e8dcc8;font-family:'Courier New',monospace;font-size:0.76rem;line-height:1.7;padding:1.4rem;border-radius:12px;border:1.5px solid #3a2010;overflow-x:auto;white-space:pre;margin:0">// Replicate API — Stable Diffusion Illustration
-async function generateImage(prompt, apiKey) {
-  const steps    = parseInt(document.getElementById('param-steps')?.value    || 30);
-  const guidance = parseFloat(document.getElementById('param-guidance')?.value || 7.5);
-  const size     = parseInt(document.getElementById('param-size')?.value     || 1024);
-  const negPrompt = document.getElementById('negPromptEditor')?.value
-    || 'text, words, watermark, blurry, ugly, deformed, extra limbs, bad anatomy, photo, realistic';
-
-  // Step 1: Start prediction
-  const res = await fetch('https://api.replicate.com/v1/models/stability-ai/stable-diffusion/predictions', {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'Prefer':        'wait=30'
-    },
-    body: JSON.stringify({
-      input: {
-        prompt:              prompt,
-        negative_prompt:     negPrompt,
-        width:               size,
-        height:              size,
-        num_inference_steps: steps,
-        guidance_scale:      guidance,
-        scheduler:           'DPMSolverMultistep'
-      }
-    })
-  });
-
-  if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Replicate error'); }
-  let prediction = await res.json();
-
-  // Step 2: Poll until complete
-  let polls = 0;
-  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && polls < 30) {
-    await new Promise(r => setTimeout(r, 2000));
-    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`,
-      { headers: { 'Authorization': `Bearer ${apiKey}` } });
-    prediction = await pollRes.json();
-    polls++;
-  }
-
-  if (prediction.status === 'failed') throw new Error('Image failed: ' + prediction.error);
-  if (!prediction.output?.[0]) throw new Error('No output from Replicate');
-  return prediction.output[0];  // Image URL
-}</pre>
+</pre>
       <button onclick="navigator.clipboard.writeText(document.getElementById('code-replicate').textContent);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy',2000)"
         style="position:absolute;top:0.7rem;right:0.7rem;background:#2e2010;border:1px solid #4a3020;border-radius:7px;padding:0.3rem 0.8rem;font-size:0.68rem;cursor:pointer;color:#e8dcc8;font-family:'Nunito',sans-serif">Copy</button>
     </div>
@@ -1338,7 +2227,7 @@ Write exactly 10 pages. Format: "Page N: [2-3 sentence text]"`;
 
 // Builds one illustration prompt per page
 function buildIllustrationPrompt(o, page) {
-  const stylePrefix = 'soft watercolour illustration, children's picture book style, '
+  const stylePrefix = 'children\'s picture book illustration, digital_illustration/grain Recraft style, '
     + 'warm pastel tones, gentle ink outlines, cosy storybook aesthetic';
   const hairDesc = [o.hairLength, o.hairTexture, o.hairColour, 'hair'].filter(Boolean).join(' ');
   const charDesc = `a ${o.age}-year-old with ${o.skin}, ${o.eyes}, ${hairDesc}`;
@@ -1355,37 +2244,45 @@ function buildIllustrationPrompt(o, page) {
 
 <!-- TAB SWITCHING + PROMPT DEFAULTS -->
 <script>
-const DEFAULT_STORY_PROMPT = `You are a warm, imaginative children's book author. Write a personalised picture book story using the details below. Output ONLY the story — no commentary, no preamble.
+const DEFAULT_STORY_PROMPT = `You are a warm, imaginative children's book author. Write a personalised picture book story. Output ONLY the story pages — no title, no preamble, no commentary.
 
-CHILD: [name], age [age]. Pronouns: [she/he/they]. Appearance: [skin], [eyes], [hair]. Personality: [personality].
-
+CHILD: [name], age [age]. Pronouns: [she/he/they]. Personality: [personality].
 OCCASION: [occasion]
 TONE: [tone] — [tone-specific writing instruction]
-SETTING: [setting]
-SPECIAL MESSAGE (weave naturally into ending): "[special message]"
+SETTING: [setting — or "warm everyday world" if blank]
+SPECIAL MESSAGE: weave naturally into the feeling of the ending — do NOT quote directly: "[message]"
 
-SUPPORTING CHARACTERS (use naturally where they fit):
-- [toy] (favourite toy — can appear as a companion)
-- [pet] (pet — give them a small role if it fits naturally)
-- [friend] (best friend — can appear as a supporting character)
+GIFT GIVER IN STORY: [name] ([relationship]) appears ONCE near the end — one warm sentence only. Not a main character.
+COMFORT OBJECT: [toy] — may appear in one scene. Do not make it magical or central.
+PET: [pet] — one brief natural appearance if it fits. Not required.
+ADDITIONAL CHARACTERS: [extra chars] — one mention maximum.
 
-CHARACTER FLAVOUR — use these as light background colour only. They should feel natural when they appear, not dominate the story. One or two brief mentions at most:
-[favourite food] | interests: [hobbies] | [extra details]
+CHARACTER FLAVOUR — one or two brief mentions only, never plot drivers:
+[food] | interests: [hobbies] | [extra details]
 
-STRUCTURE — write exactly 10 pages. Format: "Page N: [text]". 2–3 sentences per page.
-Language: simple, musical, reads aloud beautifully.
+PAGE FORMAT: Write exactly 12 pages. Label each "Page N:".
+Age [age]: [1–2 short sentences / 2–3 sentences / 3–4 sentences] per page.
+Target: [~200–300 / ~400–500 / ~600–800] words total.
 
-Page 1–2: Introduce the child in their world. Show personality through action, not description.
-Page 3–4: A challenge or exciting opportunity tied to the occasion arises.
-Page 5–7: The adventure unfolds in the setting. The setting drives the story — not their hobbies.
-Page 8–9: A moment of doubt or mishap — then the child finds their own inner strength.
-Page 10: A warm, joyful ending. The special message lives in the feeling, not in quoted words.
+Page 1: Open with the child doing something that shows their personality. Action, not description.
+Page 2: Their everyday world. Warm and familiar.
+Page 3: The occasion arrives. A feeling stirs.
+Page 4: A small challenge or moment of doubt.
+Pages 5–8: The heart of the story. Character drives every moment.
+Page 9: The lowest point — real doubt or difficulty.
+Page 10: The child finds their own strength. Not told — shown.
+Page 11: Resolution. The occasion finds its joyful conclusion. Gift giver appears here if applicable.
+Page 12: Quiet, tender final page. The message lives in the feeling. End with love.
 
-IMPORTANT: The story's heart is the OCCASION and the CHILD'S CHARACTER — not their hobbies or interests. Interests can appear as brief colour (a dinosaur on their shirt, a football they're carrying) but should never become the plot.
+CRITICAL RULES:
+— Do NOT describe the child's physical appearance (hair, eyes, skin) — that is the illustrator's job.
+— Do NOT make hobbies or interests the plot — brief colour only.
+— Secondary characters get one brief appearance maximum.
+— Write for the parent reading aloud as much as for the child listening.
 
 Write the story now:`;
 
-const DEFAULT_ILL_PROMPT = `soft watercolour illustration, children's picture book style, warm pastel tones, gentle ink outlines, cosy storybook aesthetic, award-winning children's book art. Scene: [page text]. Main character: [age]-year-old child with [skin], [eyes], [hair description], wearing bright cheerful storybook clothing. Setting: [setting]. Mood: warm, magical, joyful. Highly detailed, full colour, professional illustration.`;
+const DEFAULT_ILL_PROMPT = `children's picture book illustration, Recraft grain style, warm muted palette. Scene: [page text]. Main character: [age]-year-old child with [skin], [eyes], [hair description], wearing bright cheerful storybook clothing. Setting: [setting]. Mood: warm, magical, joyful. Highly detailed, full colour, professional illustration.`;
 
 const DEFAULT_NEG_PROMPT = `text, words, letters, watermark, signature, blurry, ugly, deformed, extra limbs, bad anatomy, adult content, photo, realistic, dark, scary, violence, weapons`;
 
