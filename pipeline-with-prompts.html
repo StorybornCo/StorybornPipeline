@@ -1569,7 +1569,7 @@ async function generateCharacterSeed(o, apiKey) {
       prompt:  prompt,
       n:       1,
       size:    '1024x1024',
-      quality: 'standard',
+      quality: 'medium',
       output_format: 'url',
     }),
   });
@@ -1650,7 +1650,7 @@ async function generatePageIllustration(o, page, referenceImageUrl, charSeedText
       prompt:  prompt,
       n:       1,
       size:    '1024x1024',
-      quality: 'standard',
+      quality: 'medium',
       output_format: 'url',
     }),
   });
@@ -1832,19 +1832,8 @@ async function runPipeline() {
             } else {
               // Fallback: text-only if seed image failed
               // Build short fallback prompt for Recraft (max 950 chars)
-              const shot = getShotType(page.num || 1);
-              const scene = page.text.replace(/Page\s*\d+:\s*/i,'').replace(/[^a-zA-Z0-9\s.,!?\-]/g,'').trim().slice(0,150);
-              const fallbackPrompt = (shot.type + ': ' + scene + '. ' + (settingSeedText||'').split('.')[0].slice(0,100) + '. ' + getPageMood(page.num||1)).slice(0, 950);
-              const negPrompt = document.getElementById('negPromptEditor') && document.getElementById('negPromptEditor').value
-                || 'text, watermark, blurry, ugly, deformed, extra limbs, bad anatomy, photo, realistic, dark, scary';
-              const steps    = parseInt((document.getElementById('param-steps') || {}).value || 30);
-              const guidance = parseFloat((document.getElementById('param-guidance') || {}).value || 7.5);
-              url = await falRunQueue('fal-ai/recraft/v3/text-to-image', {
-                prompt:   fallbackPrompt.slice(0, 950),
-                style:    'digital_illustration/grain',
-                style_id: 'eb06ab37-0114-423e-93e1-c961ef5d7781',
-                image_size: { width: 1024, height: 1024 },
-              }, replicateKey);
+              // Fallback — also use gpt-image-2
+              url = await generatePageIllustration(order, page, characterSeedUrl, charSeedText, settingSeedText, outfitSeedText, replicateKey);
             }
             setPageImage(page.num, url);
           } catch (pageErr) {
