@@ -450,16 +450,13 @@ textarea{resize:vertical;min-height:70px}
       <div class="tone-row" id="toneGroup"></div>
     </div>
     <div class="field">
-      <label>Setting <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — leave blank for a warm, everyday world)</span></label>
-      <div class="pill-group" id="settingGroup">
-        <div class="pill" onclick="sp(this,'settingGroup')">🌲 Enchanted forest</div>
-        <div class="pill" onclick="sp(this,'settingGroup')">🚀 Outer space</div>
-        <div class="pill" onclick="sp(this,'settingGroup')">🏰 Magical kingdom</div>
-        <div class="pill" onclick="sp(this,'settingGroup')">🦘 Australian outback</div>
-        <div class="pill" onclick="sp(this,'settingGroup')">🌊 Under the sea</div>
-        <div class="pill" onclick="sp(this,'settingGroup')">🌈 Dreamland</div>
+      <label>Setting <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(optional — we'll pick the perfect setting automatically)</span></label>
+      <div id="settingDropdownWrap" style="display:none">
+        <select id="settingChoice" style="width:100%;padding:0.6rem 1rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:0.9rem;color:var(--ink);background:white;margin-bottom:0.4rem" onchange="updateOrder()">
+          <option value="">✨ Automatic — best setting for this occasion</option>
+        </select>
       </div>
-      <div class="hint">Leave unselected for a realistic, warm story set in the everyday world — a neighbourhood, a classroom, a home.</div>
+      <div class="hint">We automatically choose the best setting for the occasion. You can override this above once you've selected an occasion.</div>
     </div>
     <div class="field">
       <label>Special message <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">(woven into the ending)</span></label>
@@ -634,7 +631,27 @@ function sp(el, g) {
   // Single-select for .pill groups — no toggle off
   document.querySelectorAll(`#${g} .pill`).forEach(p => p.classList.remove('sel'));
   el.classList.add('sel');
-  if (g === 'occasionGroup') v$('customOccField').style.display = el.textContent.includes('Other') ? 'block' : 'none';
+  if (g === 'occasionGroup') {
+    v$('customOccField').style.display = el.textContent.includes('Other') ? 'block' : 'none';
+    // Populate setting dropdown based on selected occasion
+    const occ = el.textContent.replace(/^[^a-zA-Z]+/, '').trim();
+    const matrix = getSettingOptions(occ);
+    const wrap = document.getElementById('settingDropdownWrap');
+    const sel  = document.getElementById('settingChoice');
+    if (matrix && sel) {
+      sel.innerHTML = '<option value="">✨ Automatic — best setting for this occasion</option>';
+      Object.keys(matrix.options).forEach(function(key) {
+        const label = key.replace(/-/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = label;
+        sel.appendChild(opt);
+      });
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
 }
 function spf(el, g) {
   // Single-select for .feat-pill groups — clicking selected item toggles it off
@@ -721,7 +738,8 @@ function gatherOrder() {
     giftRelation: pv('giftRelGroup') || '',
     giftAppear:   pv('giftAppearGroup') || 'Dedication page only',
     dedication:   v('dedication'),
-    setting:      pv('settingGroup') || '',
+    setting:      '',
+    settingChoice: document.getElementById('settingChoice') ? document.getElementById('settingChoice').value : '',
     // Tier 3 — Colour
     toy:          v('favToy'),
     pet:          v('pet'),
@@ -877,52 +895,71 @@ Let it live in the feeling of the final pages — a quiet realisation, not a dec
     ? 'RHYME: AABB throughout every page. Every couplet must scan naturally when read aloud. Check every line.'
     : 'PROSE: No rhyme. Rhythm and cadence matter deeply — read each sentence aloud as you write it.';
 
-  return `You are a master children's book author writing at the highest level of the craft.
-Write a completely unique personalised picture book story.
+  return `You are a master children's book author. Your craft is precise, warm, and honest.
+Write a completely unique personalised picture book story for ${o.name}.
 Output ONLY the story pages — no title, no author note, no commentary.
 
-════════ TIER 1: THE FOUNDATION ════════
-CHILD: ${o.name}, age ${age}. Personality: ${o.personality}.
-OCCASION: ${o.occasion}
-This is the beating heart of the story. Every page serves this moment.
-TONE: ${o.tone}${toneGuide[o.tone] ? ' — ' + toneGuide[o.tone] : ''}
+════════ THE CHILD ════════
+Name: ${o.name}, age ${age}.
+Personality: ${o.personality}.
+Occasion: ${o.occasion}
+Tone: ${o.tone}${toneGuide[o.tone] ? ' — ' + toneGuide[o.tone] : ''}
 ${specialMsgBlock}
 
-════════ TIER 2: THE SPINE ════════
+════════ SETTING ════════
 ${settingBlock}
-
-WEATHER RULE — CRITICAL:
-Weather is the ILLUSTRATOR'S tool, not yours. Do NOT write sentences about weather, light, sunshine, breeze, or atmosphere.
-If weather must appear, it is ONE embedded word or phrase woven into action — never a standalone observation.
-WRONG: "The golden sunlight filters gently through." (dedicated weather sentence — forbidden)
-WRONG: "The air feels warm and soft and new." (pure atmosphere — forbidden)  
-RIGHT: "She ran barefoot through the dewy grass." (weather implied through action — allowed)
-RIGHT: "They sat in the warm kitchen." (setting implied — allowed)
-The emotional atmosphere comes from CHARACTER and ACTION, not weather description.
 ${giftGiverBlock}
 
-════════ FORMAT (non-negotiable) ════════
+════════ RHYME RULES (if rhyming) ════════
+${rhymeRule}
+
+CRITICAL RHYME QUALITY RULES:
+1. NEVER force a rhyme. If the natural rhyme doesn't exist, rewrite the line entirely.
+2. Every rhyming word must be REAL and TRUE to the world of a child. No invented scenarios to make a rhyme work.
+3. BAD: "She put the tape measure on the wall / Then watched it slowly start to fall" — tape measures are not toys. This is false.
+4. GOOD: "She giggled, ran and jumped about / Then flopped down tired and conked right out" — real, true, age-appropriate.
+5. The LINE must make sense on its own before you worry about the rhyme.
+6. Short lines rhyme more naturally. Keep lines SHORT.
+7. Read every couplet aloud before finalising. If it sounds forced — rewrite it.
+
+════════ FORMAT ════════
 Write exactly 12 pages. Label each "Page N:"
 ${formatRule}
 ${wordBudget}
-${rhymeRule}
-CRITICAL: Do NOT describe ${o.name}'s physical appearance (hair, eyes, skin, height).
-The illustrator handles all of this. Your job is emotion and character, not description.
+NEVER describe ${o.name}'s physical appearance — no hair, eyes, skin, height. The illustrator handles this.
 Write for the parent reading aloud as much as for the child listening.
+Every word must earn its place. Cut anything that doesn't serve the emotion or action.
 
-════════ STORY ARCHITECTURE ════════
-Page 1:  ${o.name} in motion — action that immediately reveals personality. Not description.
-Page 2:  Their everyday world. Warm, grounded, familiar. Establish emotional atmosphere.
-Page 3:  The occasion arrives or approaches. A feeling stirs — anticipation, excitement, nerves.
-Page 4:  The first real moment of the occasion. Something small and specific and true.
-Page 5:  The occasion deepens. ${o.name} does something specific and joyful tied to the occasion.
-Page 6:  A moment of connection — with a place, an object, a feeling. Rich and specific.
-Page 7:  Something small doesn't go to plan. A human wobble. Not a crisis — a moment of feeling.
-Page 8:  ${o.name} faces the wobble. Alone for a breath. Their personality carries them through.
-Page 9:  The turn. Something shifts emotionally. The occasion finds its deeper meaning.
-Page 10: The emotional peak of the whole story. The biggest feeling. Let it breathe. Let it land.
-Page 11: Warm resolution. The occasion concludes with joy.${o.giftFrom && o.giftAppear === 'Yes — one moment in the story' ? ` If the occasion calls for it naturally, ${o.giftFrom} is here.` : ''}
-Page 12: A quiet, tender final page. The special message lives in the feeling, not the words. End with love.
+════════ WEATHER RULE ════════
+Weather belongs to the illustrator — NOT the story text.
+FORBIDDEN: Sentences about sunshine, light, breeze, warmth, air, atmosphere.
+ALLOWED: Weather implied through action — "She ran barefoot through the dewy grass."
+
+════════ STORY BLUEPRINT ════════
+This story has three acts. Every page has a job.
+
+ACT ONE — ESTABLISHMENT (Pages 1–3)
+Page 1: ${o.name} doing something — pure action, pure personality. We meet them in motion.
+Page 2: Their everyday world. Warm, grounded, specific and familiar. We feel at home.
+Page 3: The occasion arrives or draws near. A feeling stirs — anticipation, excitement, or nerves.
+
+ACT TWO — THE OCCASION UNFOLDS (Pages 4–8)
+Page 4: The first real moment of the occasion. Something small, specific, and completely true.
+Page 5: The occasion deepens. ${o.name} does something joyful and active tied directly to the occasion.
+Page 6: A moment of connection — with a person, a place, or a feeling. Quiet and rich.
+Page 7: The emotional middle. This could be:
+         — a small wobble or moment of uncertainty
+         — finding comfort in something familiar
+         — a quiet act of courage or kindness
+         — a funny moment that releases tension
+         Choose what fits ${o.name}'s personality and the occasion. NOT every story needs a problem.
+Page 8: ${o.name}'s inner world. A breath. A thought. Their personality carries them forward.
+
+ACT THREE — THE TURN AND RESOLUTION (Pages 9–12)
+Page 9: The turn. Something shifts. The occasion reveals its deeper meaning or joy.
+Page 10: The emotional peak. The biggest feeling in the whole story. Let it breathe. Let it land.
+Page 11: Warm resolution. The occasion ends with joy and togetherness.${o.giftFrom && o.giftAppear === 'Yes — one moment in the story' ? ` If the occasion calls for it naturally, ${o.giftFrom} appears here.` : ''}
+Page 12: A quiet, tender final page. Still. Loving. The special message lives in the feeling — never stated directly. End with love.
 
 Write the story now:`;
 }
@@ -1164,62 +1201,154 @@ function getSecondaryCharPages(o) {
 //  Subtle palette shifts applied at arc turning
 //  points only (not forced on every page).
 // ─────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  SETTING MATRIX
+//  Each occasion maps to a set of locked setting options.
+//  Customer can override via dropdown — otherwise derived automatically.
+//  Each setting has precise visual rules:
+//  - Indoor: walls, floors, key props, windows show only soft garden/sky
+//  - Outdoor: slightly elevated angle, foreground sharp, background bokeh
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const SETTING_MATRIX = {
+  'Birthday': {
+    default: 'indoor-home-party',
+    options: {
+      'indoor-home-party':   'warm Australian family living room, cream walls, wooden floorboards, birthday balloons and bunting in warm colours, soft furnishings and bookshelves, windows showing only soft blurred garden outside',
+      'outdoor-backyard':    'Australian backyard, wooden deck and lawn, birthday bunting strung between posts, slightly elevated angle, foreground sharp, background of soft blurred trees and fence, bokeh effect on background',
+      'indoor-kitchen':      'warm Australian kitchen, timber benchtop, cream walls, birthday cake on the table, warm overhead light, window showing only soft blurred garden',
+    }
+  },
+  'First Day of School': {
+    default: 'school-playground',
+    options: {
+      'school-playground':   'Australian school playground, red brick school building in background, hopscotch markings on ground, slightly elevated angle, foreground sharp, background of school building and blurred trees, bokeh on background',
+      'school-gate':         'Australian suburban street, school gate and fence in foreground, slightly elevated angle, background of blurred street and soft trees, bokeh effect, morning light',
+      'school-classroom':    'bright Australian primary school classroom, small wooden desks, colourful posters on cream walls, bookshelves, warm overhead light, windows showing only soft blurred sky',
+    }
+  },
+  'Christmas': {
+    default: 'indoor-living-room',
+    options: {
+      'indoor-living-room':  'warm Australian family living room, Christmas tree with coloured lights in the corner, presents stacked beneath it, cream walls, wooden floorboards, cosy soft furnishings, windows showing only soft blurred garden',
+      'indoor-kitchen':      'warm Australian kitchen, Christmas morning, timber benchtop with food preparation, cream walls, warm overhead light, window showing only soft blurred garden outside',
+      'outdoor-garden':      'Australian backyard on Christmas morning, wooden deck, garden beds, slightly elevated angle, foreground sharp, background of soft blurred garden and fence, bokeh effect',
+    }
+  },
+  'New Sibling': {
+    default: 'home-nursery',
+    options: {
+      'home-nursery':        'warm Australian baby nursery, cream walls, soft cot and baby furniture, pastel tones, gentle indoor light, window showing only soft blurred garden outside',
+      'home-living-room':    'warm Australian family living room, cream walls, wooden floorboards, soft furnishings, gentle natural light, windows showing only soft blurred garden',
+      'hospital-room':       'warm hospital room, soft lighting, armchair and small bed, cream walls, window showing only soft blurred sky outside',
+    }
+  },
+  'Moving House': {
+    default: 'old-home-packing',
+    options: {
+      'old-home-packing':    'Australian family home interior, cardboard moving boxes stacked along walls, wooden floorboards, bare cream walls, warm afternoon light, windows showing only soft blurred garden',
+      'new-home-arriving':   'new Australian family home, bare cream walls, wooden floorboards, a few unpacked boxes, warm afternoon light, windows showing only soft blurred garden outside',
+      'car-journey':         'inside a family car, Australian suburban streets passing outside window blurred with bokeh, warm morning light through windscreen',
+    }
+  },
+  'Lost a Tooth': {
+    default: 'bedroom-night',
+    options: {
+      'bedroom-night':       'cosy Australian child bedroom at night, warm lamp glow, soft bed and pillows, toys on shelves, cream walls, curtained window with soft moonlight glow behind it',
+      'bathroom-mirror':     'warm Australian bathroom, cream tiles, mirror above basin, warm light, intimate and contained',
+      'bedroom-morning':     'Australian child bedroom in morning light, soft bed, toys on shelves, cream walls, window showing only soft blurred garden and morning sky',
+    }
+  },
+  'Easter': {
+    default: 'backyard-garden',
+    options: {
+      'backyard-garden':     'Australian backyard garden, lawn with Easter eggs hidden in the grass, garden beds with flowers, low wooden fence, slightly elevated angle, foreground sharp, background of blurred trees and fence, bokeh effect',
+      'park-garden':         'Australian park on Easter morning, grass and garden beds, Easter eggs visible, slightly elevated angle, foreground sharp, background of softly blurred trees, bokeh effect',
+    }
+  },
+  'Just Because': {
+    default: 'home-interior',
+    options: {
+      'home-interior':       'warm Australian family home, cream walls, wooden floorboards, soft furnishings, warm natural light, windows showing only soft blurred garden outside',
+      'backyard':            'Australian backyard, wooden deck and lawn, garden beds, slightly elevated angle, foreground sharp, background of soft blurred fence and trees, bokeh effect',
+      'local-park':          'Australian local park, grass and large trees, park bench, slightly elevated angle, foreground sharp, background of soft blurred trees and sky, bokeh effect',
+      'cafe':                'warm Australian café interior, timber tables, cream walls, coffee machine, warm overhead light, window showing only soft blurred street outside',
+    }
+  },
+  'Graduation': {
+    default: 'park',
+    options: {
+      'park':                'Australian park, green lawn, large trees, slightly elevated angle, foreground sharp, background of softly blurred trees and sky, bokeh effect',
+      'school-hall':         'Australian school hall, wooden floors, cream walls, chairs and bunting, warm overhead light, contained indoor space',
+    }
+  },
+  'New Baby': {
+    default: 'home-nursery',
+    options: {
+      'home-nursery':        'warm Australian baby nursery, cream walls, soft cot and baby furniture, pastel tones, gentle indoor light, window showing only soft blurred garden outside',
+      'home-living-room':    'warm Australian family living room, cream walls, wooden floorboards, soft furnishings, gentle natural light, windows showing only soft blurred garden',
+    }
+  },
+  'New Home': {
+    default: 'new-home-arriving',
+    options: {
+      'new-home-arriving':   'new Australian family home interior, bare cream walls, wooden floorboards, unpacked boxes, warm afternoon light, windows showing only soft blurred garden outside',
+      'new-home-exterior':   'new Australian home exterior, front garden and path, slightly elevated angle, foreground sharp, background of soft blurred street and trees, bokeh effect',
+    }
+  },
+  'Retirement': {
+    default: 'home-garden',
+    options: {
+      'home-garden':         'warm Australian established garden, garden beds and lawn, large trees, slightly elevated angle, foreground sharp, background of soft blurred trees and fence, bokeh effect',
+      'home-interior':       'warm Australian family home, cream walls, wooden floorboards, familiar furnishings and books, warm afternoon light, windows showing only soft blurred garden',
+    }
+  },
+};
+
+function getSettingOptions(occasion) {
+  const key = Object.keys(SETTING_MATRIX).find(function(k) {
+    return occasion.toLowerCase().indexOf(k.toLowerCase()) >= 0;
+  });
+  return key ? SETTING_MATRIX[key] : null;
+}
+
 function buildSettingSeed(o) {
   const tone     = o.tone     || '';
   const occasion = o.occasion || '';
 
-  // ── Base environment ──
-  // If user selected a setting, use it as the anchor.
-  // Otherwise derive from occasion — always real world, always joyful.
-  const envByOccasion = {
-    'Birthday':            'warm family home — kitchen, living room, backyard with balloons and bunting. NO Christmas tree. NO Christmas decorations.',
-    'First Day of School': 'quiet Australian suburban street and school gate, morning light, footpath. NO Christmas tree. NO Christmas decorations.',
-    'Christmas':           'warm Australian family home. Christmas tree with lights and baubles. Presents under the tree. Morning light through windows.',
-    'New Sibling':         'warm sunlit family home — soft bedroom and living room, gentle light. NO Christmas tree. NO Christmas decorations.',
-    'Moving House':        'cardboard boxes, familiar streets from a car window, a new front door. NO Christmas tree. NO Christmas decorations.',
-    'Lost a Tooth':        'cosy bedroom at night — soft lamp light, moonlight at the window, cosy bed. NO Christmas tree. NO Christmas decorations.',
-    'Easter':              'Australian backyard garden — dewy grass, golden morning light, autumn leaves on ground, colourful Easter eggs hidden in the garden. NO Christmas tree. NO Christmas decorations. NO star on top of anything.',
-    'Just Because':        'sunny Australian park or warm café. Golden afternoon, outdoor setting. NO Christmas tree. NO Christmas decorations.',
-    'Graduation':          'sunny park or family garden, open blue sky, warm afternoon. NO Christmas tree. NO Christmas decorations.',
-    'New Baby':            'warm soft bedroom and living room — cream and pastel tones, gentle morning light. NO Christmas tree. NO Christmas decorations.',
-    'New Home':            'new house with bare rooms, cardboard boxes, a new garden. Late afternoon. NO Christmas tree. NO Christmas decorations.',
-    'Retirement':          'beloved garden or home interior, golden afternoon light. NO Christmas tree. NO Christmas decorations.',
-  };
+  // Get setting matrix for this occasion
+  const matrix = getSettingOptions(occasion);
 
-  const occasionKey = Object.keys(envByOccasion).find(function(k){
-    return occasion.toLowerCase().indexOf(k.toLowerCase()) >= 0;
-  });
-  const baseEnv = o.setting
-    ? o.setting.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\s]*/u, '').trim()
-    : (envByOccasion[occasionKey] || 'warm Australian family home and garden, everyday joyful environment');
+  let baseEnv;
+  if (o.settingChoice && matrix && matrix.options[o.settingChoice]) {
+    // Customer chose a specific setting
+    baseEnv = matrix.options[o.settingChoice];
+  } else if (matrix) {
+    // Use the default for this occasion
+    baseEnv = matrix.options[matrix.default];
+  } else if (o.setting) {
+    // Custom setting entered
+    baseEnv = o.setting.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\s]*/u, '').trim();
+  } else {
+    baseEnv = 'warm Australian family home, cream walls, wooden floorboards, soft furnishings, windows showing only soft blurred garden outside';
+  }
 
-  // ── Colour palette by tone ──
+  // Colour palette by tone
   const paletteByTone = {
-    'Warm & Heartfelt':  'warm amber and cream colour palette, soft golden light, honey tones',
-    'Funny & Silly':     'bright saturated colours, playful warm palette, cheerful clear light',
-    'Big Adventure':     'vivid warm palette, strong clear light, rich outdoor colours',
-    'Funny & Relatable': 'comfortable warm tones, soft neutral palette, gentle diffused light',
-    'Heartfelt':         'muted warm palette, soft golden hour light, intimate and close',
-    'Celebratory':       'bright joyful colours, warm gold and cream, festive warm light',
-    'Inspirational':     'clear warm palette, open light, uplifting colour temperature',
-    'Warm & Nostalgic':  'golden hour palette, amber and honey tones, long warm shadows',
-    'Epic Adventure':    'rich bold palette, dramatic warm light, strong saturated colours',
-    'Funny & Witty':     'warm neutral palette, clear natural light, understated colours',
+    'Warm & Heartfelt':  'warm amber and cream palette',
+    'Funny & Silly':     'bright warm playful palette',
+    'Big Adventure':     'vivid rich warm palette',
+    'Funny & Relatable': 'comfortable warm neutral palette',
+    'Heartfelt':         'muted warm intimate palette',
+    'Celebratory':       'bright warm joyful palette',
+    'Inspirational':     'clear uplifting warm palette',
+    'Warm & Nostalgic':  'golden amber nostalgic palette',
+    'Epic Adventure':    'rich bold dramatic palette',
+    'Funny & Witty':     'warm understated natural palette',
   };
-  const palette = paletteByTone[tone] || 'warm amber and cream palette, soft natural Australian light';
+  const palette = paletteByTone[tone] || 'warm amber and cream palette';
 
-  // ── Time of day (set once, held throughout — no drift) ──
-  const timeByOccasion = {
-    'Birthday':            'morning to midday light',
-    'First Day of School': 'early morning golden light, slight dew in the air',
-    'Christmas':           'bright Christmas morning light',
-    'Lost a Tooth':        'soft evening and night light, warm lamp glow',
-    'Easter':              'early morning light, golden and fresh',
-    'Retirement':          'warm golden afternoon light',
-  };
-  const timeOfDay = timeByOccasion[occasionKey] || 'warm natural daylight';
-
-  return baseEnv + '. ' + palette + '. ' + timeOfDay + '. Australian in feel, grounded and real, never fantasy.';
+  return baseEnv + '. ' + palette + '. Australian in feel, grounded and real.';
 }
 
 // ─────────────────────────────────────────────
@@ -1596,48 +1725,48 @@ async function generateCharacterSeed(o, apiKey) {
 //  $0.04 per image. Best character consistency available.
 // ─────────────────────────────────────────────
 async function generatePageIllustration(o, page, referenceImageUrl, charSeedText, settingSeedText, outfitSeedText, apiKey) {
-  // gpt-image-2 — all pages use text-to-image with full character description
-  // Character consistency via locked character description in every prompt
-  // Wide shots get explicit composition instructions
-  const shot    = getShotType(page.num || 1);
-  const mood    = getPageMood(page.num || 1);
+  // gpt-image-2 — tight, non-repetitive prompts
+  // Style string: locked. Character: locked. Setting: locked. Scene: the only variable.
+  const shot      = getShotType(page.num || 1);
+  const mood      = getPageMood(page.num || 1);
   const secondary = getSecondaryCharPages(o);
-  const age     = parseInt(o.age) || 5;
-  const pageNum = page.num || 1;
+  const age       = parseInt(o.age) || 5;
+  const pageNum   = page.num || 1;
+  const isWide    = [1, 2, 5, 9].indexOf(pageNum) > -1;
 
-  const isWideShot = [1, 2, 5, 9].indexOf(pageNum) > -1;
-
+  // Scene — extract the action happening on this page only
   const scene = page.text
     .replace(/Page\s*\d+:\s*/i, '')
-    .replace(/[^a-zA-Z0-9\s.,!?\-]/g, '')
-    .trim().slice(0, 150);
+    .replace(/[^a-zA-Z0-9\s.,!?\-']/g, '')
+    .trim().slice(0, 120);
 
-  const setting = settingSeedText
-    ? settingSeedText.split('.')[0].slice(0, 120)
-    : 'warm Australian home, joyful everyday setting';
+  // Setting — use full locked string verbatim (same every page)
+  const setting = settingSeedText || 'warm Australian family home, cream walls, wooden floorboards, no windows visible';
 
-  const secChar = secondary[pageNum]
-    ? secondary[pageNum].slice(0, 80)
-    : '';
+  // Secondary character — one page only
+  const secChar = secondary[pageNum] ? secondary[pageNum].slice(0, 60) : '';
 
-  // Character description — locked and repeated every page for consistency
-  const charDesc = age + ' year old child, ' + charSeedText + ', wearing ' + outfitSeedText;
+  // Character — concise locked description
+  const charDesc = age + ' year old child, ' + charSeedText.slice(0, 100) + ', wearing ' + outfitSeedText.slice(0, 80);
 
-  // Composition instruction based on shot type
-  const composition = isWideShot
-    ? 'WIDE SHOT — the child is a tiny figure, no larger than 1/4 of the frame. The environment fills the image. Rich detailed world around the small character. Buildings, trees, sky all visible.'
-    : (shot.prompt || shot.type);
+  // Composition — wide vs close
+  const composition = isWide
+    ? 'WIDE SHOT: child is a tiny figure in the scene — no larger than one quarter of the frame. Environment and setting fill the image.'
+    : (shot.prompt || shot.type).slice(0, 80);
 
-  const prompt = [
+  // Build prompt — ordered by priority, no repetition
+  const parts = [
     composition,
-    'Scene: ' + scene,
-    'Setting: ' + setting,
-    'Character: ' + charDesc,
+    scene,
+    charDesc,
+    setting,
     mood,
     secChar,
-    "vintage 1970s children's book illustration, gouache on textured paper, visible paper grain, matte finish, flat colour shapes, limited colour palette, muted warm tones, earthy colours, hand-painted look, slightly imperfect hand-drawn outlines, soft edges, no gradients, naive perspective, playful composition, mid-century storybook illustration style, heavy paper texture, visible brush strokes, pigment variation, slightly uneven paint coverage. Avoid Pixar style, avoid 3D rendering, avoid glossy lighting, avoid sharp digital edges. No text, no letters, no typography, no speech bubbles, no watermark.",
-    "same illustration style, same character model sheet, same brushwork, consistent across all pages of a children's book",
-  ].filter(Boolean).join('. ');
+    "same character, same outfit, same setting style, consistent across all pages",
+    "vintage 1970s children's book illustration, gouache on textured paper, grain texture, flat colour shapes, muted warm palette, hand-painted, imperfect outlines, no windows showing outside, no open doors, no text, no watermark",
+  ].filter(Boolean);
+
+  const prompt = parts.join('. ');
 
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
