@@ -820,6 +820,199 @@ function getWeatherAndPlace(o) {
 }
 
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  PLOT SCAFFOLDS
+//  Every occasion has a real plot — a sequence of
+//  specific actions and events, not just emotions.
+//  Each page = one thing that actually happens.
+// ─────────────────────────────────────────────
+function getPlotScaffold(occasion, name, giftFrom, giftAppear) {
+  const occ = (occasion || '').toLowerCase();
+  const giftLine = giftFrom && giftAppear === 'Yes — one moment in the story'
+    ? `Page 11: ${giftFrom} is there — a warm moment of celebration together.`
+    : `Page 11: The family is together, warm and happy.`;
+
+  const scaffolds = {
+
+    'first day of school': `Page 1:  ${name} wakes up — excited but nervous. Gets dressed in their new clothes. Something small and specific about this morning.
+Page 2:  Breakfast. Packing the bag. Trying to be brave. A small ritual that shows their personality.
+Page 3:  The drive or walk to school. Seeing the school gate for the first time. The world feels bigger suddenly.
+Page 4:  Going inside. Leaving the parent at the gate. That moment of crossing the threshold alone.
+Page 5:  Finding their spot — their peg, their desk, their place. Something that makes it feel a little more theirs.
+Page 6:  A new friend appears. Something small and specific happens between them — a shared moment.
+Page 7:  Playing, learning, doing something they love. So absorbed they forget to be nervous.
+Page 8:  Suddenly it is home time. ${name} is surprised — the day went so fast.
+Page 9:  Running back to the parent or carer at the gate. The reunion.
+${giftLine}
+Page 12: That night — quiet, content, already thinking about tomorrow.`,
+
+    'birthday': `Page 1:  ${name} wakes up and remembers — it is their birthday. That first moment of pure joy.
+Page 2:  Coming downstairs and seeing the decorations. Someone has made it special.
+Page 3:  Breakfast with a candle or a small special thing. The day has officially begun.
+Page 4:  Friends arrive or the party begins. The noise and colour and excitement.
+Page 5:  A game, an activity, a moment of pure fun at the party.
+Page 6:  The cake comes out. Candles. Everyone singing. ${name} makes a wish.
+Page 7:  Opening a present — the anticipation, the unwrapping, the joy of what's inside.
+Page 8:  A quiet moment in the middle of all the noise — something that makes them feel loved.
+Page 9:  The party winds down. Hugs and goodbyes.
+${giftLine}
+Page 12: That night — worn out and happy, surrounded by the day's joy.`,
+
+    'christmas': (function() {
+      const hasSibling = o && o.extraChars && o.extraChars.length > 0;
+      const isCreative = o && o.personality && (
+        o.personality.toLowerCase().includes('creat') ||
+        o.personality.toLowerCase().includes('artis') ||
+        o.personality.toLowerCase().includes('kind') ||
+        o.personality.toLowerCase().includes('caring') ||
+        o.personality.toLowerCase().includes('thought')
+      );
+      if (hasSibling) {
+        return 'PLOT: ' + name + ' wants to make this Christmas magical for their little sibling.\n' +
+          'WANT: Make it the best Christmas ever for someone smaller.\n' +
+          'OBSTACLE: The little one gets overwhelmed. Things do not go to plan.\n' +
+          'RESOLUTION: A quiet private moment between just the two of them becomes the best part.\n\n' +
+          'Page 1:  ' + name + ' wakes early — but this year they wait. Listening for the little one.\n' +
+          'Page 2:  They go in together. ' + name + ' watching the little one see the tree for the first time.\n' +
+          'Page 3:  Helping the little one choose a present. Watching them struggle with the wrapping.\n' +
+          'Page 4:  ' + name + ' shows them how — the little one tears paper everywhere. Pure joy.\n' +
+          'Page 5:  The little one gets overwhelmed. Too much noise, too much everything. Starts to cry.\n' +
+          'Page 6:  ' + name + ' takes them somewhere quiet. Just the two of them. Sits close until it passes.\n' +
+          'Page 7:  They find one small thing together — one toy, one moment, just theirs.\n' +
+          'Page 8:  Back to the family — but ' + name + ' stays close, looks out for the little one.\n' +
+          'Page 9:  Later — the little one falls asleep clutching the thing they found together.\n' +
+          giftLine + '\n' +
+          'Page 12: That night ' + name + ' thinks — being the big one is the best present of all.';
+      } else if (isCreative) {
+        return 'PLOT: ' + name + ' has made a secret handmade present. Weeks of work.\n' +
+          'WANT: Give the most meaningful present — something made with their own hands.\n' +
+          'OBSTACLE: It does not look right. They nearly give up. Then comes the moment of giving.\n' +
+          'RESOLUTION: The real genuine reaction — not polite, truly moved.\n\n' +
+          'Page 1:  Weeks before Christmas — ' + name + ' working in secret on something. Hidden, careful.\n' +
+          'Page 2:  Christmas Eve. Finished. Not perfect. They almost start again but do not.\n' +
+          'Page 3:  Christmas morning — other presents come and go. ' + name + ' keeps theirs hidden.\n' +
+          'Page 4:  The moment comes. Holding it out. Heart going fast.\n' +
+          'Page 5:  Watching the face of the person opening it. Every single second of it.\n' +
+          'Page 6:  The reaction — not polite. Real. Eyes wide. Pulling ' + name + ' in close.\n' +
+          'Page 7:  ' + name + ' looks at what they made. Not perfect. It did not matter at all.\n' +
+          'Page 8:  The rest of the day — playing, eating, laughing — but that moment stays.\n' +
+          'Page 9:  Someone shows it to someone else. ' + name + ' overhears. Quietly proud.\n' +
+          giftLine + '\n' +
+          'Page 12: That night — the best feeling is not what they received. It is what they gave.';
+      } else {
+        return 'PLOT: ' + name + ' has wanted one specific thing all year. Is it there?\n' +
+          'WANT: The one present they have been hoping for all year.\n' +
+          'OBSTACLE: Cannot find it. Wrong shapes. Growing worry. Nearly gives up.\n' +
+          'RESOLUTION: Lets go of wanting — and there it is. It was always there.\n\n' +
+          'Page 1:  ' + name + ' wakes before everyone. Lies completely still for one second. Then bolts.\n' +
+          'Page 2:  The tree. The presents. Scanning every shape and size. Looking for the one.\n' +
+          'Page 3:  Waking the family — cannot wait. Cannot stand another second of not knowing.\n' +
+          'Page 4:  Presents start opening. Each one good — but not the one. Growing quiet inside.\n' +
+          'Page 5:  All the wrong shapes. All the wrong sizes. ' + name + ' tries hard not to show it.\n' +
+          'Page 6:  Something shifts. The family is laughing. The food smells good. ' + name + ' lets go a little.\n' +
+          'Page 7:  Helps someone else open something. Forgets to look for their own for a moment.\n' +
+          'Page 8:  One present left. Small. Perfectly shaped. Their name on the label.\n' +
+          'Page 9:  Opens it slowly. Knowing. Almost not wanting to rush this part.\n' +
+          giftLine + '\n' +
+          'Page 12: That night — it was not just the present. The waiting was part of it too.';
+      }
+    })(),
+
+    'easter': `Page 1:  ${name} wakes up and looks outside. Something is different about the garden this morning.
+Page 2:  Getting dressed quickly — too excited to eat breakfast first.
+Page 3:  Outside. The hunt begins. Eyes scanning the garden for hidden eggs.
+Page 4:  The first egg found — held up triumphantly, examined carefully.
+Page 5:  Searching high and low — behind the pot plant, under the bench, in the flowers.
+Page 6:  A tricky one that takes a while to find. The satisfaction when they do.
+Page 7:  Counting the eggs. Lining them up. Deciding which to eat first.
+Page 8:  Sitting down to eat one. That first taste of chocolate in the morning sun.
+Page 9:  Helping to hide some for someone smaller or for next year.
+${giftLine}
+Page 12: Later — chocolate still on their face, happily tired.`,
+
+    'new sibling': `Page 1:  ${name} has been waiting. Today is the day the baby comes home.
+Page 2:  The car pulls up. Everyone moves carefully and quietly around this new small thing.
+Page 3:  First look at the baby. Really looking. Taking it all in.
+Page 4:  Being allowed to hold the baby — or sit very close. The weight of it. The smallness.
+Page 5:  The baby does something — grips a finger, makes a sound, opens its eyes.
+Page 6:  ${name} shows the baby something — their favourite toy, their room, their world.
+Page 7:  A quiet moment alone with the baby. Just the two of them.
+Page 8:  The parents watching. Proud of both of them.
+Page 9:  ${name} tells someone — a grandparent, a friend — about their new sibling.
+${giftLine}
+Page 12: That night — two children asleep in the same house for the first time.`,
+
+    'lost a tooth': `Page 1:  ${name} is eating or playing and suddenly — wiggle, wiggle. A wobbly tooth.
+Page 2:  Showing everyone. Wiggling it constantly. Can't stop touching it.
+Page 3:  The moment it finally comes out. Holding it up. Tiny and perfect.
+Page 4:  Rinsing the gap in the mirror. Feeling it with their tongue. Strange and wonderful.
+Page 5:  Telling everyone who will listen. This is big news.
+Page 6:  Getting ready for bed — carefully placing the tooth somewhere special.
+Page 7:  Trying to sleep. Too excited. Wondering if it will really happen.
+Page 8:  Morning. The rush to check. Did something come?
+Page 9:  Finding what was left. The pure joy of the discovery.
+${giftLine}
+Page 12: Running to tell someone — grinning with that famous gap-toothed smile.`,
+
+    'moving house': `Page 1:  The boxes are everywhere. This is really happening. ${name} takes it all in.
+Page 2:  Packing up their room — each thing wrapped and put away. Saying quiet goodbyes.
+Page 3:  The last look around the old house. Empty now. Smaller somehow.
+Page 4:  The car journey — watching the old neighbourhood disappear in the window.
+Page 5:  Arriving. The new house. New smells, new sounds, new light.
+Page 6:  Exploring — running through rooms, claiming a space, finding something surprising.
+Page 7:  Unpacking their own things. Making it start to feel like theirs.
+Page 8:  The first meal in the new house. Together on the floor or at a half-unpacked table.
+Page 9:  Looking out the window at the new street. A neighbour waves. Something small and hopeful.
+${giftLine}
+Page 12: That night — new ceiling, familiar warmth. Home is wherever they are together.`,
+
+    'just because': `Page 1:  ${name} doing what they love most — fully absorbed, completely themselves.
+Page 2:  An ordinary morning that feels just right. Small details that make up their world.
+Page 3:  Something unexpected and lovely happens — a surprise, a discovery, a treat.
+Page 4:  Going somewhere together — a local place that feels special to them.
+Page 5:  Something fun happens there. An activity, a game, a moment of pure joy.
+Page 6:  A moment of connection with someone they love. Something said or done.
+Page 7:  A small challenge — something doesn't go to plan, but ${name} handles it their way.
+Page 8:  Back to doing what they love. The day has been good.
+Page 9:  Sharing the day — telling someone what happened, showing what they found or made.
+${giftLine}
+Page 12: The end of a perfect ordinary day. These are the ones that matter most.`,
+
+    'graduation': `Page 1:  ${name} wakes up knowing today is different. Getting ready feels like preparation.
+Page 2:  The outfit. The moment in the mirror. Looking like the person they're becoming.
+Page 3:  Arriving — seeing everyone gathered, dressed up, excited.
+Page 4:  The ceremony begins. Waiting for their moment.
+Page 5:  Their name is called. Walking up. That moment belongs entirely to them.
+Page 6:  Photos and congratulations. Everyone proud. Smiles everywhere.
+Page 7:  A quiet moment to absorb it — what has been, what comes next.
+Page 8:  Celebrating together — food, laughter, the people who matter most.
+Page 9:  A memory made — something that will be told and retold.
+${giftLine}
+Page 12: Looking ahead. Ready. The best is still to come.`,
+
+  };
+
+  // Find matching scaffold
+  const key = Object.keys(scaffolds).find(function(k) {
+    return occ.indexOf(k) >= 0;
+  });
+
+  if (key) return scaffolds[key];
+
+  // Generic fallback scaffold
+  return 'Page 1:  ' + name + ' in the middle of something they love. We meet them in action.\n' +
+    'Page 2:  Their everyday world — the people and places that are theirs.\n' +
+    'Page 3:  Something begins. The occasion takes shape.\n' +
+    'Page 4:  The first real moment of it. Something small and specific and true.\n' +
+    'Page 5:  ' + name + ' does something — an action, a choice, something that shows who they are.\n' +
+    'Page 6:  A moment of connection — with a person, a place, an object.\n' +
+    'Page 7:  Something requires a little courage or patience. ' + name + ' finds it.\n' +
+    'Page 8:  A beat of quiet. Something felt or understood.\n' +
+    'Page 9:  The occasion reaches its peak. The most important moment.\n' +
+    giftLine + '\n' +
+    'Page 12: The quiet end. Love. Belonging. Everything is right.';
+}
+
 //  BUILD STORY PROMPT — fully weighted
 // ─────────────────────────────────────────────
 function buildStoryPrompt(o) {
@@ -895,73 +1088,63 @@ Let it live in the feeling of the final pages — a quiet realisation, not a dec
     ? 'RHYME: AABB throughout every page. Every couplet must scan naturally when read aloud. Check every line.'
     : 'PROSE: No rhyme. Rhythm and cadence matter deeply — read each sentence aloud as you write it.';
 
-  return `You are a master children's book author. Your craft is precise, warm, and honest.
-Write a completely unique personalised picture book story for ${o.name}.
-Output ONLY the story pages — no title, no author note, no commentary.
+  return `You are a master children's book author. Write a story that feels genuinely human — specific, true, and earned.
 
-════════ THE CHILD ════════
-Name: ${o.name}, age ${age}.
-Personality: ${o.personality}.
+You will work through THREE STAGES before outputting the final pages. Do not skip any stage.
+
+════════ ABOUT THIS CHILD ════════
+Name: ${o.name}, age ${age}
+Personality: ${o.personality}
 Occasion: ${o.occasion}
 Tone: ${o.tone}${toneGuide[o.tone] ? ' — ' + toneGuide[o.tone] : ''}
-${specialMsgBlock}
-
-════════ SETTING ════════
 ${settingBlock}
 ${giftGiverBlock}
+${specialMsgBlock}
 
-════════ RHYME RULES (if rhyming) ════════
-${rhymeRule}
+════════ STAGE 1 — STORY CONCEPT ════════
+Write a short story concept (3-4 sentences) that answers:
+1. What does ${o.name} specifically WANT in this story? Be concrete. Be specific to their age and personality.
+2. What small, real obstacle gets in the way? Nothing catastrophic — something true to childhood.
+3. How does ${o.name} solve it themselves? Not luck, not a parent saving them — they do it.
+4. What is the one feeling the reader is left with at the end?
 
-CRITICAL RHYME QUALITY RULES:
-1. NEVER force a rhyme. If the natural rhyme doesn't exist, rewrite the line entirely.
-2. Every rhyming word must be REAL and TRUE to the world of a child. No invented scenarios to make a rhyme work.
-3. BAD: "She put the tape measure on the wall / Then watched it slowly start to fall" — tape measures are not toys. This is false.
-4. GOOD: "She giggled, ran and jumped about / Then flopped down tired and conked right out" — real, true, age-appropriate.
-5. The LINE must make sense on its own before you worry about the rhyme.
-6. Short lines rhyme more naturally. Keep lines SHORT.
-7. Read every couplet aloud before finalising. If it sounds forced — rewrite it.
+Output this as: CONCEPT: [your concept]
 
-════════ FORMAT ════════
-Write exactly 12 pages. Label each "Page N:"
+════════ STAGE 2 — PAGE BREAKDOWN ════════
+Map your concept to exactly 12 pages.
+Write one sentence per page — what physically HAPPENS on that page.
+Actions only. No adjectives. No feelings named. Just what occurs.
+Each page must move the plot forward — something new must happen every time.
+
+Output this as:
+BREAKDOWN:
+P1: [action]
+P2: [action]
+... through P12.
+
+════════ STAGE 3 — THE STORY ════════
+Now write the actual pages using your breakdown as your guide.
+Do NOT deviate from your breakdown. The breakdown is the story — these are just the words.
+
+Format: exactly 12 pages, labelled "Page N:"
 ${formatRule}
 ${wordBudget}
-NEVER describe ${o.name}'s physical appearance — no hair, eyes, skin, height. The illustrator handles this.
-Write for the parent reading aloud as much as for the child listening.
-Every word must earn its place. Cut anything that doesn't serve the emotion or action.
 
-════════ WEATHER RULE ════════
-Weather belongs to the illustrator — NOT the story text.
-FORBIDDEN: Sentences about sunshine, light, breeze, warmth, air, atmosphere.
-ALLOWED: Weather implied through action — "She ran barefoot through the dewy grass."
+LINE RULES — every single line must follow these:
+— Describe something that HAPPENS. No adjectives without an action attached.
+— Never name an emotion. Show it through what the child does.
+— Never describe ${o.name}'s appearance — hair, eyes, skin, height. The illustrator handles this.
+— Every word earns its place. Cut anything that doesn't move the plot or reveal character.
+— Write for the parent reading aloud as much as the child listening.
 
-════════ STORY BLUEPRINT ════════
-This story has three acts. Every page has a job.
+WEATHER: The illustrator's job, not yours. No lines about sunshine, light, warmth, breeze.
+Allowed only as action: "She splashed through every puddle on the way."
 
-ACT ONE — ESTABLISHMENT (Pages 1–3)
-Page 1: ${o.name} doing something — pure action, pure personality. We meet them in motion.
-Page 2: Their everyday world. Warm, grounded, specific and familiar. We feel at home.
-Page 3: The occasion arrives or draws near. A feeling stirs — anticipation, excitement, or nerves.
+${rhymeRule}
+RHYME: Never force it. If the honest line doesn't rhyme — rewrite the line, not the truth.
+Every rhyming word must be real and true to a child's world. Read every couplet aloud. If it sounds forced, it is forced.
 
-ACT TWO — THE OCCASION UNFOLDS (Pages 4–8)
-Page 4: The first real moment of the occasion. Something small, specific, and completely true.
-Page 5: The occasion deepens. ${o.name} does something joyful and active tied directly to the occasion.
-Page 6: A moment of connection — with a person, a place, or a feeling. Quiet and rich.
-Page 7: The emotional middle. This could be:
-         — a small wobble or moment of uncertainty
-         — finding comfort in something familiar
-         — a quiet act of courage or kindness
-         — a funny moment that releases tension
-         Choose what fits ${o.name}'s personality and the occasion. NOT every story needs a problem.
-Page 8: ${o.name}'s inner world. A breath. A thought. Their personality carries them forward.
-
-ACT THREE — THE TURN AND RESOLUTION (Pages 9–12)
-Page 9: The turn. Something shifts. The occasion reveals its deeper meaning or joy.
-Page 10: The emotional peak. The biggest feeling in the whole story. Let it breathe. Let it land.
-Page 11: Warm resolution. The occasion ends with joy and togetherness.${o.giftFrom && o.giftAppear === 'Yes — one moment in the story' ? ` If the occasion calls for it naturally, ${o.giftFrom} appears here.` : ''}
-Page 12: A quiet, tender final page. Still. Loving. The special message lives in the feeling — never stated directly. End with love.
-
-Write the story now:`;
+Write all three stages now:`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1683,8 +1866,8 @@ async function generateCharacterSeed(o, apiKey) {
     charSeed,
     'wearing ' + outfitSeed,
     'plain warm cream background, no scene, no props, single character only',
-    "vintage 1970s children's book illustration, gouache on textured paper, visible paper grain, matte finish, flat colour shapes, limited colour palette, muted warm tones, earthy colours, hand-painted look, slightly imperfect hand-drawn outlines, soft edges, no gradients, naive perspective, playful composition, mid-century storybook illustration style, heavy paper texture, visible brush strokes, pigment variation, slightly uneven paint coverage. Avoid Pixar style, avoid 3D rendering, avoid glossy lighting, avoid sharp digital edges. No text, no letters, no typography, no speech bubbles, no watermark.",
-    "same illustration style, same character model sheet, consistent across all pages of a children's book",
+    "modern children's book illustration, clean flat colour shapes, warm muted palette, simple bold outlines, hand-illustrated quality, plain cream background, contemporary and warm, similar to Wonderbly or Oliver Jeffers, not vintage, not textured. No text, no watermark.",
+    "same character, same outfit, same clean modern illustration style throughout",
   ].join('. ');
 
   const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -1762,8 +1945,8 @@ async function generatePageIllustration(o, page, referenceImageUrl, charSeedText
     setting,
     mood,
     secChar,
-    "same character, same outfit, same setting style, consistent across all pages",
-    "vintage 1970s children's book illustration, gouache on textured paper, grain texture, flat colour shapes, muted warm palette, hand-painted, imperfect outlines, no windows showing outside, no open doors, no text, no watermark",
+    "same character, same outfit, same clean modern illustration style throughout",
+    "modern children's book illustration, clean flat colour shapes, warm muted palette, simple bold outlines, hand-illustrated quality, plain or simple background when not essential to the scene, rich background only when the environment adds to the story, contemporary and warm, similar to Wonderbly or Oliver Jeffers, not vintage, not textured, not retro, no text, no watermark",
   ].filter(Boolean);
 
   const prompt = parts.join('. ');
